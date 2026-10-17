@@ -1,0 +1,19 @@
+---
+name: Forge fix Windows build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - forge-fix-3.6.1
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/reusable-build-windows.yml
+    with:
+      run_canary_smoke: false
+    secrets: inherit
