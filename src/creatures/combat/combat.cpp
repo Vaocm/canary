@@ -1103,9 +1103,9 @@ void Combat::combatTileEffects(const CreatureVector &spectators, const std::shar
 					} else if (itemId == ITEM_WILDGROWTH) {
 						itemId = ITEM_WILDGROWTH_SAFE;
 					}
-				} else if (itemId == ITEM_FIREFIELD_PVP_FULL || itemId == ITEM_POISONFIELD_PVP || itemId == ITEM_ENERGYFIELD_PVP || itemId == ITEM_MAGICWALL || itemId == ITEM_WILDGROWTH) {
-					casterPlayer->addInFightTicks();
 				}
+				// Soul Eater: placing a field no longer puts the caster in fight; the fight/PZ lock is
+				// applied only when the field really hurts another player (as in real Tibia).
 			}
 		}
 
