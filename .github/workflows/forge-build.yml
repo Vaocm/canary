@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - forge-fix-3.6.1
+      - se-hide-name
 
 permissions:
   contents: read
