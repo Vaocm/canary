@@ -31,7 +31,7 @@ function getChainValue(creature)
 	if player then
 		targets = targets + player:getWheelSpellAdditionalTarget("Chained Penance")
 	end
-	return targets, 3, false
+	return targets, 1, false
 end
 
 combat:setCallback(CALLBACK_PARAM_CHAINVALUE, "getChainValue")
