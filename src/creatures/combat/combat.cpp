@@ -2477,7 +2477,8 @@ void MagicField::onStepInField(const std::shared_ptr<Creature> &creature) {
 				}
 			}
 
-			if (!harmfulField || (OTSYS_TIME() - createTime <= 5000) || creature->hasBeenAttacked(ownerId)) {
+			// Soul Eater: the field stays owned by its caster (like real Tibia), so a player stepping on it later still gives the caster PZ/fight
+			if (!harmfulField || true) {
 				conditionCopy->setParam(CONDITION_PARAM_OWNER, ownerId);
 			}
 		}
