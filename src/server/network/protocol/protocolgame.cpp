@@ -10639,7 +10639,17 @@ void ProtocolGame::sendMonkData(MonkData_t type, uint8_t value) {
 	msg.addByte(0xC1); // Custom opcode for monk data
 
 	msg.addByte(enumToValue(type)); // Type of monk data (e.g., Harmony, Serenity)
-	msg.addByte(value); // The value associated (e.g., enabled/disabled)
+	if (type == MonkData_t::Virtue) {
+		// Soul Eater: the client expects count (u8) followed by one u16 virtue id per entry (273 + virtue = spell id)
+		if (value == 0) {
+			msg.addByte(0);
+		} else {
+			msg.addByte(1);
+			msg.add<uint16_t>(273 + value);
+		}
+	} else {
+		msg.addByte(value); // The value associated (e.g., enabled/disabled)
+	}
 
 	writeToOutputBuffer(msg); // Sends the message to the client
 }
