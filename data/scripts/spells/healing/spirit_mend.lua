@@ -5,8 +5,9 @@ combat:setParameter(COMBAT_PARAM_DISPEL, CONDITION_PARALYZE)
 combat:setParameter(COMBAT_PARAM_AGGRESSIVE, false)
 
 function onGetFormulaValues(_player, level, magicLevel)
-	local min = (level * 0.2 + magicLevel * 7.22) + 44
-	local max = (level * 0.2 + magicLevel * 12.79) + 79
+	-- Soul Eater: base power 240 (was 210) as in real Tibia
+	local min = ((level * 0.2 + magicLevel * 7.22) + 44) * 240 / 210
+	local max = ((level * 0.2 + magicLevel * 12.79) + 79) * 240 / 210
 	return min, max
 end
 

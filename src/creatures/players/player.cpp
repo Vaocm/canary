@@ -8591,7 +8591,7 @@ namespace {
 			if (creature->getType() == CREATURETYPE_NPC) {
 				continue;
 			}
-			if (++count >= 6) {
+			if (++count >= 8) { // Soul Eater: Serene allows up to 7 adjacent creatures
 				return true;
 			}
 		}
@@ -13331,10 +13331,11 @@ double_t Player::getHarmonyBonus() {
 		return 1;
 	}
 
-	double_t harmonyBaseBonus = 8.;
+	// Soul Eater: real Tibia (Sep 2026): base 7% + 0.005% per level; Virtue of Harmony +50% (+100% while Serene)
+	double_t harmonyBaseBonus = 7. + 0.005 * getLevel();
 
 	if (virtue == Virtue_t::Harmony) {
-		harmonyBaseBonus += hasCondition(CONDITION_SERENE) ? 8. : 4.;
+		harmonyBaseBonus *= hasCondition(CONDITION_SERENE) ? 2.0 : 1.5;
 	}
 
 	harmonyBaseBonus += m_wheelPlayer.getStage(WheelStage_t::ASCETIC);

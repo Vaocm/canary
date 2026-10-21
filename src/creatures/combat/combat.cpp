@@ -1894,7 +1894,12 @@ std::vector<std::pair<Position, std::vector<uint32_t>>> Combat::pickChainTargets
 	int backtrackingAttempts = 10;
 	while (!targets.empty() && targets.size() <= maxTargets && backtrackingAttempts > 0) {
 		auto currentTarget = targets.back();
-		auto spectators = Spectators().find<Creature>(currentTarget->getPosition(), false, chainDistance, chainDistance, chainDistance, chainDistance);
+		// Soul Eater: monk chains (Chained Penance) pick the first target within 4 sqm of the caster, then jump by chainDistance
+		uint8_t searchDistance = chainDistance;
+		if (!initialTarget && currentTarget == caster && caster->getPlayer() && caster->getPlayer()->getPlayerVocationEnum() == VOCATION_MONK_CIP) {
+			searchDistance = std::max<uint8_t>(chainDistance, 4);
+		}
+		auto spectators = Spectators().find<Creature>(currentTarget->getPosition(), false, searchDistance, searchDistance, searchDistance, searchDistance);
 		g_logger().debug("Combat::pickChainTargets: currentTarget: {}, spectators: {}", currentTarget->getName(), spectators.size());
 
 		double closestDistance = std::numeric_limits<double>::max();
