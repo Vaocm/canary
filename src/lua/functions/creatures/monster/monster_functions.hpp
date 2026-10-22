@@ -36,6 +36,7 @@ private:
 	static int luaMonsterIsFriend(lua_State* L);
 
 	static int luaMonsterAddFriend(lua_State* L);
+	static int luaMonsterSetWalkthroughOwner(lua_State* L);
 	static int luaMonsterRemoveFriend(lua_State* L);
 	static int luaMonsterGetFriendList(lua_State* L);
 	static int luaMonsterGetFriendCount(lua_State* L);

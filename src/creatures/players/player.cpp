@@ -1420,6 +1420,10 @@ bool Player::canWalkthrough(const std::shared_ptr<Creature> &creature) {
 		return true;
 	}
 
+	if (monster && monster->getWalkthroughOwner() != 0 && monster->getWalkthroughOwner() == getID()) {
+		return true;
+	}
+
 	if (player) {
 		const auto &playerTile = player->getTile();
 		if (!playerTile || (!playerTile->hasFlag(TILESTATE_NOPVPZONE) && !playerTile->hasFlag(TILESTATE_PROTECTIONZONE) && player->getLevel() > static_cast<uint32_t>(g_configManager().getNumber(PROTECTION_LEVEL)) && g_game().getWorldType() != WORLD_TYPE_NO_PVP)) {
@@ -1460,7 +1464,7 @@ bool Player::canWalkthroughEx(const std::shared_ptr<Creature> &creature) const {
 
 	const auto &monster = creature->getMonster();
 	if (monster) {
-		if (!monster->isFamiliar()) {
+		if (!monster->isFamiliar() && !(monster->getWalkthroughOwner() != 0 && monster->getWalkthroughOwner() == getID())) {
 			return false;
 		}
 		return true;

@@ -33,6 +33,7 @@ void MonsterFunctions::init(lua_State* L) {
 	Lua::registerMethod(L, "Monster", "isOpponent", MonsterFunctions::luaMonsterIsOpponent);
 	Lua::registerMethod(L, "Monster", "isFriend", MonsterFunctions::luaMonsterIsFriend);
 	Lua::registerMethod(L, "Monster", "addFriend", MonsterFunctions::luaMonsterAddFriend);
+	Lua::registerMethod(L, "Monster", "setWalkthroughOwner", MonsterFunctions::luaMonsterSetWalkthroughOwner);
 	Lua::registerMethod(L, "Monster", "removeFriend", MonsterFunctions::luaMonsterRemoveFriend);
 	Lua::registerMethod(L, "Monster", "getFriendList", MonsterFunctions::luaMonsterGetFriendList);
 	Lua::registerMethod(L, "Monster", "getFriendCount", MonsterFunctions::luaMonsterGetFriendCount);
@@ -263,6 +264,32 @@ int MonsterFunctions::luaMonsterIsFriend(lua_State* L) {
 	} else {
 		lua_pushnil(L);
 	}
+	return 1;
+}
+
+int MonsterFunctions::luaMonsterSetWalkthroughOwner(lua_State* L) {
+	// monster:setWalkthroughOwner(player|playerId|nil) - only that player can walk through this monster
+	const auto &monster = Lua::getUserdataShared<Monster>(L, 1, "Monster");
+	if (!monster) {
+		lua_pushnil(L);
+		return 1;
+	}
+
+	uint32_t ownerId = 0;
+	if (Lua::isNumber(L, 2)) {
+		ownerId = Lua::getNumber<uint32_t>(L, 2);
+	} else if (const auto &owner = Lua::getPlayer(L, 2)) {
+		ownerId = owner->getID();
+	}
+	monster->setWalkthroughOwner(ownerId);
+
+	// tell every client again whether it may walk through this monster
+	for (const auto &spectator : Spectators().find<Player>(monster->getPosition(), true)) {
+		if (const auto &tmpPlayer = spectator->getPlayer()) {
+			tmpPlayer->sendCreatureWalkthrough(monster, tmpPlayer->canWalkthroughEx(monster));
+		}
+	}
+	Lua::pushBoolean(L, true);
 	return 1;
 }
 

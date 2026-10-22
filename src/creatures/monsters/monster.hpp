@@ -82,6 +82,13 @@ public:
 	bool isRewardBoss() const;
 	bool isHostile() const;
 	bool isFamiliar() const;
+	// id of the one player who may walk through this monster (0 = nobody); used by Assassin Shadow Clones
+	uint32_t getWalkthroughOwner() const {
+		return m_walkthroughOwner;
+	}
+	void setWalkthroughOwner(uint32_t playerId) {
+		m_walkthroughOwner = playerId;
+	}
 	bool canSeeInvisibility() const override;
 	uint32_t getManaCost() const;
 	RespawnType getRespawnType() const;
@@ -321,6 +328,7 @@ private:
 	bool soulPit = false;
 
 	bool m_isDead = false;
+	uint32_t m_walkthroughOwner = 0;
 	bool m_isImmune = false;
 
 	void onCreatureEnter(const std::shared_ptr<Creature> &creature);
