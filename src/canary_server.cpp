@@ -289,7 +289,7 @@ void CanaryServer::logInfos() {
 
 	logger.info("A server developed by: {}", ProtocolStatus::SERVER_DEVELOPERS);
 	logger.info("Visit our website for updates, support, and resources: "
-	            "https://docs.opentibiabr.com/");
+	            "https://soul-eater.com/");
 }
 
 /**
