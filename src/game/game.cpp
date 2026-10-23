@@ -9705,6 +9705,12 @@ void Game::processHighscoreResults(const DBResult_ptr &result, uint32_t playerID
 			do {
 				const auto &voc = g_vocations().getVocation(result->getNumber<uint16_t>("vocation"));
 				uint8_t characterVocation = voc ? voc->getClientId() : 0;
+				// Soul Eater: custom Assassin (11) / Shadow Ninja (12) get their own display ids (21/22) so the client can name them
+				if (voc && voc->getId() == 11) {
+					characterVocation = 21;
+				} else if (voc && voc->getId() == 12) {
+					characterVocation = 22;
+				}
 				std::string loyaltyTitle; // todo get loyalty title from player
 				characters.emplace_back(std::move(result->getString("name")), result->getNumber<uint64_t>("points"), result->getNumber<uint32_t>("id"), result->getNumber<uint32_t>("rank"), result->getNumber<uint16_t>("level"), characterVocation, loyaltyTitle);
 			} while (result->next());

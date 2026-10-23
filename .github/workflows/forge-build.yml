@@ -8,6 +8,7 @@ on:
       - forge-fix-3.6.1
       - se-hide-name
       - se-startup-text
+      - se-highscore-voc
 
 permissions:
   contents: read
