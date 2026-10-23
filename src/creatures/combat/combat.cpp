@@ -378,6 +378,11 @@ ReturnValue Combat::canDoCombat(const std::shared_ptr<Creature> &attacker, const
 					return RETURNVALUE_YOUMAYNOTATTACKTHISPLAYER;
 				}
 
+				// Soul Eater: secure mode also protects unmarked players from area spells, runes and other non-targeted damage (as in real Tibia)
+				if (attackerPlayer != targetPlayer && attackerPlayer->hasSecureMode() && !Combat::isInPvpZone(attackerPlayer, targetPlayer) && attackerPlayer->getSkullClient(targetPlayer) == SKULL_NONE) {
+					return RETURNVALUE_TURNSECUREMODETOATTACKUNMARKEDPLAYERS;
+				}
+
 				// nopvp-zone
 				const auto &attackerTile = attackerPlayer->getTile();
 				if (targetPlayerTile && targetPlayerTile->hasFlag(TILESTATE_NOPVPZONE)) {
