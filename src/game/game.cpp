@@ -8168,9 +8168,9 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 			return false;
 		}
 
-		// Soul Eater: an Assassin's critical MELEE hits do not show the game's critical effect/message,
+		// Soul Eater: an Assassin's critical hits (melee, ranged and the Lua blade procs/Lunar Slash, which arrive as spell-origin damage) do not show the game's critical effect/message,
 		// the Assassin shows its own custom critical effect instead (Assassin = vocation 11, Shadow Ninja = 12)
-		if (damage.critical && damage.origin == ORIGIN_MELEE && attackerPlayer && (attackerPlayer->getVocationId() == 11 || attackerPlayer->getVocationId() == 12)) {
+		if (damage.critical && damage.origin != ORIGIN_CONDITION && attackerPlayer && (attackerPlayer->getVocationId() == 11 || attackerPlayer->getVocationId() == 12)) {
 			damage.critical = false;
 		}
 
