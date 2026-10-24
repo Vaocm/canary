@@ -8168,11 +8168,15 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 			return false;
 		}
 
-		// Soul Eater: an Assassin's critical hits (melee, ranged and the Lua blade procs/Lunar Slash, which arrive as spell-origin damage) do not show the game's critical effect/message,
-		// the Assassin shows its own custom critical effect instead (Assassin = vocation 11, Shadow Ninja = 12)
-		if (damage.critical && damage.origin != ORIGIN_CONDITION && attackerPlayer && (attackerPlayer->getVocationId() == 11 || attackerPlayer->getVocationId() == 12)) {
-			damage.critical = false;
+		// Soul Eater: Assassin (vocation 11) / Shadow Ninja (12) critical hits keep the "critical" wording in the combat log
+		// but never show the game's critical effect (the Assassin has its own custom effects).
+		// Scripts can pass origin 100 to doTargetCombatHealth to label a hit as critical (used by the Lunar Slash hits).
+		constexpr uint8_t SE_FORCED_CRITICAL_ORIGIN = 100;
+		if (damage.origin == static_cast<CombatOrigin>(SE_FORCED_CRITICAL_ORIGIN)) {
+			damage.origin = ORIGIN_SPELL;
+			damage.critical = true;
 		}
+		const bool seHideCriticalEffect = attackerPlayer && (attackerPlayer->getVocationId() == 11 || attackerPlayer->getVocationId() == 12);
 
 		if (damage.origin != ORIGIN_NONE) {
 			const auto events = target->getCreatureEvents(CREATURE_EVENT_HEALTHCHANGE);
@@ -8272,7 +8276,7 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 
 		if (damage.fatal) {
 			addMagicEffect(spectators.data(), targetPos, CONST_ME_FATAL);
-		} else if (damage.critical) {
+		} else if (damage.critical && !seHideCriticalEffect) {
 			addMagicEffect(spectators.data(), targetPos, CONST_ME_CRITICAL_DAMAGE);
 		}
 
