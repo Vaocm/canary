@@ -8177,6 +8177,11 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 			damage.critical = true;
 		}
 		const bool seHideCriticalEffect = attackerPlayer && (attackerPlayer->getVocationId() == 11 || attackerPlayer->getVocationId() == 12);
+		// Soul Eater: tell the scripts whether this Assassin melee hit is a real critical hit (storage 59990: 1 = critical, 0 = normal hit);
+		// the Assassin blades play their slash effect exactly on real critical hits
+		if (seHideCriticalEffect && damage.origin == ORIGIN_MELEE) {
+			attackerPlayer->addStorageValue(59990, damage.critical ? 1 : 0);
+		}
 
 		if (damage.origin != ORIGIN_NONE) {
 			const auto events = target->getCreatureEvents(CREATURE_EVENT_HEALTHCHANGE);
