@@ -8,6 +8,7 @@
  */
 
 #include "game/game.hpp"
+#include <ctime>
 
 #include "config/configmanager.hpp"
 #include "creatures/appearance/mounts/mounts.hpp"
@@ -4137,6 +4138,21 @@ void Game::playerMove(uint32_t playerId, Direction direction) {
 	player->resetIdleTime();
 	player->setNextWalkActionTask(nullptr);
 	player->cancelPush();
+
+	// Soul Eater: Gorgon1 dash. While the spell keeps storage 59992 at a time (seconds) in the future, an arrow key
+	// does not walk. The pressed direction is stored in 59993 (direction + 1) for the spell script, which dashes the
+	// player. The walk request is cancelled on the client without any message. The time limit makes sure a player
+	// can never stay locked if the script stops.
+	{
+		const int32_t gorgonUntil = player->getStorageValue(59992);
+		if (gorgonUntil > 0 && gorgonUntil > static_cast<int32_t>(std::time(nullptr))) {
+			if (static_cast<int32_t>(direction) <= static_cast<int32_t>(DIRECTION_WEST)) {
+				player->addStorageValue(59993, static_cast<int32_t>(direction) + 1);
+			}
+			player->sendCancelWalk();
+			return;
+		}
+	}
 
 	player->startAutoWalk(std::vector<Direction> { direction }, false, Creature::WalkStartPolicy::ImmediateWhenReady);
 }
