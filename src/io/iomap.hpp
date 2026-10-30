@@ -146,7 +146,9 @@ public:
 			map->housefile = mapName;
 			map->housefile += "-house.xml";
 		}
-		return map->housesCustomMaps[customMapIndex].loadHousesXML(map->housefile);
+		// Tiles of custom maps register their houses in the main house list (map->houses),
+		// so the custom house XML must be applied to that same list.
+		return map->houses.loadHousesXML(map->housefile);
 	}
 
 private:
