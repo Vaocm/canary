@@ -8188,11 +8188,14 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 		// but never show the game's critical effect (the Assassin has its own custom effects).
 		// Scripts can pass origin 100 to doTargetCombatHealth to label a hit as critical (used by the Lunar Slash hits).
 		constexpr uint8_t SE_FORCED_CRITICAL_ORIGIN = 100;
+		bool seForcedCritical = false;
 		if (damage.origin == static_cast<CombatOrigin>(SE_FORCED_CRITICAL_ORIGIN)) {
+			seForcedCritical = true;
 			damage.origin = ORIGIN_SPELL;
 			damage.critical = true;
 		}
-		const bool seHideCriticalEffect = attackerPlayer && (attackerPlayer->getVocationId() == 11 || attackerPlayer->getVocationId() == 12);
+		// Real Assassin spell crits (origin spell, not script-forced) show the normal critical effect like other vocations; melee/ranged and forced slash hits stay hidden
+		const bool seHideCriticalEffect = attackerPlayer && (attackerPlayer->getVocationId() == 11 || attackerPlayer->getVocationId() == 12) && (seForcedCritical || damage.origin != ORIGIN_SPELL);
 		// Soul Eater: tell the scripts whether this Assassin melee hit is a real critical hit (storage 59990: 1 = critical, 0 = normal hit);
 		// the Assassin blades play their slash effect exactly on real critical hits
 		if (seHideCriticalEffect && damage.origin == ORIGIN_MELEE) {
