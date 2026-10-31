@@ -15,7 +15,9 @@
 #include "utils/tools.hpp"
 #include <creatures/creatures_definitions.hpp>
 
-std::vector<std::shared_ptr<Familiar>> familiars[VOCATION_LAST + 1];
+// Soul Eater: the Assassin (11) and the Shadow Ninja (12) have their own familiar lists, so the table must be bigger than VOCATION_LAST
+constexpr uint16_t FAMILIARS_VOCATION_LAST = 12;
+std::vector<std::shared_ptr<Familiar>> familiars[FAMILIARS_VOCATION_LAST + 1];
 
 Familiars &Familiars::getInstance() {
 	return inject<Familiars>();
@@ -29,6 +31,11 @@ bool Familiars::reload() {
 }
 
 std::vector<std::shared_ptr<Familiar>> &Familiars::getFamiliars(uint16_t vocation) {
+	if (vocation > FAMILIARS_VOCATION_LAST) {
+		static std::vector<std::shared_ptr<Familiar>> noFamiliars;
+		noFamiliars.clear();
+		return noFamiliars;
+	}
 	return familiars[vocation];
 }
 
@@ -54,7 +61,7 @@ bool Familiars::loadFromXml() {
 		}
 
 		auto vocation = pugi::cast<uint16_t>(attr.value());
-		if (vocation > VOCATION_LAST) {
+		if (vocation > FAMILIARS_VOCATION_LAST) {
 			g_logger().warn("[Familiars::loadFromXml] - Invalid familiar vocation {}", vocation);
 			continue;
 		}
@@ -73,13 +80,16 @@ bool Familiars::loadFromXml() {
 			familiarsNode.attribute("type").as_string()
 		));
 	}
-	for (uint16_t vocation = VOCATION_NONE; vocation <= VOCATION_LAST; ++vocation) {
+	for (uint16_t vocation = VOCATION_NONE; vocation <= FAMILIARS_VOCATION_LAST; ++vocation) {
 		familiars[vocation].shrink_to_fit();
 	}
 	return true;
 }
 
 std::shared_ptr<Familiar> Familiars::getFamiliarByLookType(uint16_t vocation, uint16_t lookType) const {
+	if (vocation > FAMILIARS_VOCATION_LAST) {
+		return nullptr;
+	}
 	if (auto it = std::ranges::find_if(familiars[vocation], [lookType](const auto &familiar_it) {
 			return familiar_it->lookType == lookType;
 		});
