@@ -425,6 +425,17 @@ ReturnValue Combat::canDoCombat(const std::shared_ptr<Creature> &attacker, const
 				if (target->isSummon() && targetMasterPlayer && target->getZoneType() == ZONE_NOPVP) {
 					return RETURNVALUE_ACTIONNOTPERMITTEDINANOPVPZONE;
 				}
+
+				// Soul Eater: another player's summon (familiar, clone...) is protected like its owner: party members never
+				// hit it, and nobody hits it with the PvP button off (secure mode) unless the owner is skulled or in a PvP zone
+				if (targetMasterPlayer && targetMasterPlayer != attackerPlayer) {
+					if (attackerPlayer->isPartner(targetMasterPlayer)) {
+						return RETURNVALUE_YOUMAYNOTATTACKTHISCREATURE;
+					}
+					if (attackerPlayer->hasSecureMode() && !Combat::isInPvpZone(attackerPlayer, target) && attackerPlayer->getSkullClient(targetMasterPlayer) == SKULL_NONE) {
+						return RETURNVALUE_YOUMAYNOTATTACKTHISCREATURE;
+					}
+				}
 			} else if (attackerMonster) {
 				if ((!targetMaster || !targetMasterPlayer) && attacker->getFaction() == FACTION_DEFAULT) {
 					if (!attackerMaster || !masterAttackerPlayer) {
