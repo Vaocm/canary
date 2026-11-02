@@ -11,8 +11,12 @@
 
 #include "game/game.hpp"
 
+#include <algorithm>
+
 void Guild::addMember(const std::shared_ptr<Player> &player) {
-	membersOnline.emplace_back(player);
+	if (std::find(membersOnline.begin(), membersOnline.end(), player) == membersOnline.end()) {
+		membersOnline.emplace_back(player);
+	}
 	for (const auto &member : getMembersOnline()) {
 		g_game().updatePlayerHelpers(member);
 	}
