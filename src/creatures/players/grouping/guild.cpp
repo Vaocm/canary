@@ -14,9 +14,11 @@
 #include <algorithm>
 
 void Guild::addMember(const std::shared_ptr<Player> &player) {
-	if (std::find(membersOnline.begin(), membersOnline.end(), player) == membersOnline.end()) {
-		membersOnline.emplace_back(player);
-	}
+	// Soul Eater: never list the same character twice (also drops a stale copy of the same character)
+	membersOnline.remove_if([&player](const std::shared_ptr<Player> &online) {
+		return !online || online == player || online->getGUID() == player->getGUID();
+	});
+	membersOnline.emplace_back(player);
 	for (const auto &member : getMembersOnline()) {
 		g_game().updatePlayerHelpers(member);
 	}
