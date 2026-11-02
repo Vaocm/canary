@@ -911,6 +911,15 @@ BlockType_t Creature::blockHit(const std::shared_ptr<Creature> &attacker, const 
 
 	if (attacker) {
 		attacker->onAttackedCreature(static_self_cast<Creature>());
+		// Soul Eater: a player's summon (familiar, clone...) hurting another player counts as the owner attacking,
+		// so the owner gets the PZ lock / white skull (unless PvP is off, where the damage is blocked anyway)
+		if (const auto &attackerMaster = attacker->getMaster(); attackerMaster && getPlayer() && attackerMaster != static_self_cast<Creature>()) {
+			if (const auto &masterPlayer = attackerMaster->getPlayer()) {
+				if (!masterPlayer->hasSecureMode() || getSkull() != SKULL_NONE || getZoneType() == ZONE_PVP) {
+					masterPlayer->onAttackedCreature(static_self_cast<Creature>());
+				}
+			}
+		}
 		attacker->onAttackedCreatureBlockHit(blockType);
 	}
 
