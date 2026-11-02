@@ -1421,6 +1421,10 @@ bool Player::canWalkthrough(const std::shared_ptr<Creature> &creature) {
 	}
 
 	if (player) {
+		// Soul Eater: like real Tibia, two players who both have PvP off (secure mode) can walk through each other
+		if (hasSecureMode() && player->hasSecureMode() && getZoneType() != ZONE_PVP && player->getZoneType() != ZONE_PVP) {
+			return true;
+		}
 		const auto &playerTile = player->getTile();
 		if (!playerTile || (!playerTile->hasFlag(TILESTATE_NOPVPZONE) && !playerTile->hasFlag(TILESTATE_PROTECTIONZONE) && player->getLevel() > static_cast<uint32_t>(g_configManager().getNumber(PROTECTION_LEVEL)) && g_game().getWorldType() != WORLD_TYPE_NO_PVP)) {
 			return false;
@@ -1469,6 +1473,10 @@ bool Player::canWalkthroughEx(const std::shared_ptr<Creature> &creature) const {
 	const auto &player = creature->getPlayer();
 	const auto &npc = creature->getNpc();
 	if (player) {
+		// Soul Eater: both players have PvP off (secure mode)
+		if (hasSecureMode() && player->hasSecureMode() && player->getZoneType() != ZONE_PVP) {
+			return true;
+		}
 		const auto &playerTile = player->getTile();
 		return playerTile && (playerTile->hasFlag(TILESTATE_NOPVPZONE) || playerTile->hasFlag(TILESTATE_PROTECTIONZONE) || player->getLevel() <= static_cast<uint32_t>(g_configManager().getNumber(PROTECTION_LEVEL)) || g_game().getWorldType() == WORLD_TYPE_NO_PVP);
 	} else if (npc) {
