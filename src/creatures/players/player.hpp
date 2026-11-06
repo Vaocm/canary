@@ -1044,6 +1044,7 @@ public:
 
 	void sendCancelMessage(const std::string &msg) const;
 	void sendCancelMessage(ReturnValue message) const;
+	mutable std::string pendingEquipMessage;
 	void sendCancelTarget() const;
 	void sendCancelWalk() const;
 	void sendChangeSpeed(const std::shared_ptr<Creature> &creature, uint16_t newSpeed) const;
