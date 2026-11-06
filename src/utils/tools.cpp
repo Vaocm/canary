@@ -1417,7 +1417,7 @@ const char* getReturnMessage(ReturnValue value) {
 			return "Both hands need to be free.";
 
 		case RETURNVALUE_CANNOTBEDRESSED:
-			return "You cannot dress this object there.";
+			return "You cannot wear this equipment yet.";
 
 		case RETURNVALUE_PUTTHISOBJECTINYOURHAND:
 			return "Put this object in your hand.";

@@ -4655,6 +4655,14 @@ ReturnValue Player::queryAdd(int32_t index, const std::shared_ptr<Thing> &thing,
 		}
 
 		if (!g_moveEvents().onPlayerEquip(getPlayer(), item, static_cast<Slots_t>(index), true)) {
+			// Soul Eater: say what is actually required instead of only "cannot dress this object"
+			const ItemType &equipType = Item::items[item->getID()];
+			const std::string equipWho = equipType.vocationString.empty() ? std::string("players") : equipType.vocationString;
+			if (equipType.minReqLevel > getLevel()) {
+				sendTextMessage(MESSAGE_FAILURE, fmt::format("This equipment can only be worn by {} of level {} or higher.", equipWho, equipType.minReqLevel));
+			} else if (!equipType.vocationString.empty()) {
+				sendTextMessage(MESSAGE_FAILURE, fmt::format("This equipment can only be worn by {}.", equipType.vocationString));
+			}
 			return RETURNVALUE_CANNOTBEDRESSED;
 		}
 	}
