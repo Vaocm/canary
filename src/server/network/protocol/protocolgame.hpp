@@ -179,6 +179,7 @@ private:
 	void parseImbuementAction(NetworkMessage &msg);
 	void parseWeaponProficiency(NetworkMessage &msg);
 	void parseTaskHuntingAction(NetworkMessage &msg);
+	void parseTaskBoardAction(NetworkMessage &msg);
 	void sendHighscoresNoData();
 	void sendHighscores(const std::vector<HighscoreCharacter> &characters, uint8_t categoryId, uint32_t vocationId, uint16_t page, uint16_t pages, uint32_t updateTimer);
 
@@ -385,6 +386,7 @@ private:
 	void sendGameNews();
 	void sendResourcesBalance(uint64_t money = 0, uint64_t bank = 0, uint64_t preyCards = 0, uint64_t taskHunting = 0, uint64_t forgeDust = 0, uint64_t forgeSliver = 0, uint64_t forgeCores = 0);
 	void sendResourceBalance(Resource_t resourceType, uint64_t value);
+	void sendTaskBoardResource(Resource_t resourceType, uint32_t value);
 	void sendCharmResourcesBalance(uint32_t charm = 0, uint32_t minorCharm = 0, uint32_t maxCharm = 0, uint32_t maxMinorCharm = 0);
 	void sendCharmResourceBalance(CharmResource_t resourceType, uint32_t value);
 	void sendSaleItemList(const std::vector<ShopBlock> &shopVector, const std::map<uint16_t, uint16_t> &inventoryMap);
@@ -569,6 +571,7 @@ private:
 
 	friend class Player;
 	friend class PlayerWheel;
+	friend class PlayerTaskBoard;
 	friend class PlayerVIP;
 	friend class PlayerAttachedEffects;
 	friend class LivestreamManager;

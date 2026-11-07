@@ -8575,6 +8575,17 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 				applyCharmRune(targetMonster, attackerPlayer, target, realDamage);
 				applyLifeLeech(attackerPlayer, targetMonster, target, damage, realDamage);
 				applyManaLeech(attackerPlayer, targetMonster, target, damage, realDamage);
+				// Bounty Talisman: life leech against the active bounty task creature
+				if (targetMonster && realDamage > 0) {
+					if (const auto bountyLeech = attackerPlayer->taskBoard().getLifeLeechPercent(targetMonster->getRaceId()); bountyLeech > 0.0) {
+						CombatParams bountyParams;
+						CombatDamage bountyHeal;
+						bountyHeal.origin = ORIGIN_SPELL;
+						bountyHeal.primary.type = COMBAT_HEALING;
+						bountyHeal.primary.value = std::max<int32_t>(1, static_cast<int32_t>(std::lround(realDamage * bountyLeech / 100.0)));
+						Combat::doCombatHealth(nullptr, attackerPlayer, bountyHeal, bountyParams);
+					}
+				}
 			}
 			updatePlayerPartyHuntAnalyzer(damage, attackerPlayer);
 		}

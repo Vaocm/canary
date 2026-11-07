@@ -498,6 +498,10 @@ void PlayerFunctions::init(lua_State* L) {
 	Lua::registerMethod(L, "Player", "getVirtue", PlayerFunctions::luaPlayerGetVirtue);
 	Lua::registerMethod(L, "Player", "setVirtue", PlayerFunctions::luaPlayerSetVirtue);
 	Lua::registerMethod(L, "Player", "getSeStance", PlayerFunctions::luaPlayerGetSeStance);
+	Lua::registerMethod(L, "Player", "getBountyLootPercentage", PlayerFunctions::luaPlayerGetBountyLootPercentage);
+	Lua::registerMethod(L, "Player", "setWeeklyTaskExpansion", PlayerFunctions::luaPlayerSetWeeklyTaskExpansion);
+	Lua::registerMethod(L, "Player", "addBountyPoints", PlayerFunctions::luaPlayerAddBountyPoints);
+	Lua::registerMethod(L, "Player", "addSoulseals", PlayerFunctions::luaPlayerAddSoulseals);
 	Lua::registerMethod(L, "Player", "setSeStance", PlayerFunctions::luaPlayerSetSeStance);
 	Lua::registerMethod(L, "Player", "fillHarmony", PlayerFunctions::luaPlayerFillHarmony);
 	Lua::registerMethod(L, "Player", "getHarmony", PlayerFunctions::luaPlayerGetHarmony);
@@ -5456,6 +5460,57 @@ int PlayerFunctions::luaCalculateFlatDamageHealing(lua_State* L) {
 	}
 
 	lua_pushnumber(L, player->calculateFlatDamageHealing());
+	return 1;
+}
+
+int PlayerFunctions::luaPlayerGetBountyLootPercentage(lua_State* L) {
+	// player:getBountyLootPercentage(raceid) -- More Loot talisman bonus (0 when raceid is not the active bounty task)
+	const auto &player = Lua::getUserdataShared<Player>(L, 1, "Player");
+	if (!player) {
+		Lua::reportErrorFunc(Lua::getErrorDesc(LUA_ERROR_PLAYER_NOT_FOUND));
+		return 1;
+	}
+
+	lua_pushnumber(L, player->taskBoard().getLootPercent(Lua::getNumber<uint16_t>(L, 2, 0)));
+	return 1;
+}
+
+int PlayerFunctions::luaPlayerSetWeeklyTaskExpansion(lua_State* L) {
+	// player:setWeeklyTaskExpansion(enabled)
+	const auto &player = Lua::getUserdataShared<Player>(L, 1, "Player");
+	if (!player) {
+		Lua::reportErrorFunc(Lua::getErrorDesc(LUA_ERROR_PLAYER_NOT_FOUND));
+		return 1;
+	}
+
+	player->taskBoard().setWeeklyExpansion(Lua::getBoolean(L, 2, true));
+	Lua::pushBoolean(L, true);
+	return 1;
+}
+
+int PlayerFunctions::luaPlayerAddBountyPoints(lua_State* L) {
+	// player:addBountyPoints(amount)
+	const auto &player = Lua::getUserdataShared<Player>(L, 1, "Player");
+	if (!player) {
+		Lua::reportErrorFunc(Lua::getErrorDesc(LUA_ERROR_PLAYER_NOT_FOUND));
+		return 1;
+	}
+
+	player->taskBoard().addBountyPoints(Lua::getNumber<uint32_t>(L, 2, 0));
+	Lua::pushBoolean(L, true);
+	return 1;
+}
+
+int PlayerFunctions::luaPlayerAddSoulseals(lua_State* L) {
+	// player:addSoulseals(amount)
+	const auto &player = Lua::getUserdataShared<Player>(L, 1, "Player");
+	if (!player) {
+		Lua::reportErrorFunc(Lua::getErrorDesc(LUA_ERROR_PLAYER_NOT_FOUND));
+		return 1;
+	}
+
+	player->taskBoard().addSoulseals(Lua::getNumber<uint32_t>(L, 2, 0));
+	Lua::pushBoolean(L, true);
 	return 1;
 }
 

@@ -1431,6 +1431,9 @@ void ProtocolGame::parsePacketFromDispatcher(NetworkMessage &msg, uint8_t recvby
 		case 0xB3:
 			parseWeaponProficiency(msg);
 			break;
+		case 0x5F:
+			parseTaskBoardAction(msg);
+			break;
 		case 0xBA:
 			parseTaskHuntingAction(msg);
 			break;
@@ -2493,16 +2496,18 @@ void ProtocolGame::parseTaskHuntingAction(NetworkMessage &msg) {
 		return;
 	}
 
-	uint8_t slot = msg.getByte();
-	uint8_t action = msg.getByte();
-	bool upgrade = msg.getByte(true) != 0;
-	auto raceId = msg.get<uint16_t>();
+	// With the Task Board this opcode (186) is the Soulseal fight request: it only carries the race id.
+	msg.get<uint16_t>();
+	player->sendCancelMessage("The Soulpit challenge with Soulseals is not available yet.");
+}
 
-	if (!g_configManager().getBoolean(TASK_HUNTING_ENABLED)) {
+void ProtocolGame::parseTaskBoardAction(NetworkMessage &msg) {
+	if (oldProtocol || !player) {
 		return;
 	}
 
-	g_game().playerTaskHuntingAction(player->getID(), slot, action, upgrade, raceId);
+	const uint8_t option = msg.getByte();
+	player->taskBoard().handleAction(option, msg);
 }
 
 void ProtocolGame::sendHighscoresNoData() {
@@ -4172,14 +4177,10 @@ void ProtocolGame::sendCyclopediaCharacterStoreSummary() {
 	    slotP && slotP->state != PreyDataState_Locked) {
 		preySlotsUnlocked++;
 	}
-	// Task hunting third slot unlocked
-	if (const auto &slotH = player->getTaskHuntingSlotById(PreySlot_Three);
-	    slotH && slotH->state != PreyTaskDataState_Locked) {
-		preySlotsUnlocked++;
-	}
-	msg.addByte(preySlotsUnlocked); // getPreySlotById + getTaskHuntingSlotById
+	msg.addByte(preySlotsUnlocked); // getPreySlotById
 
 	msg.addByte(cyclopediaSummary.m_preyWildcards); // getPreyCardsObtained
+	msg.addByte(player->taskBoard().hasWeeklyExpansion() ? 0x01 : 0x00); // permanent weekly task expansion
 	msg.addByte(cyclopediaSummary.m_instantRewards); // getRewardCollectionObtained
 	msg.addByte(player->hasCharmExpansion() ? 0x01 : 0x00);
 	msg.addByte(cyclopediaSummary.m_hirelings); // getHirelingsObtained
@@ -5538,6 +5539,18 @@ void ProtocolGame::sendResourceBalance(Resource_t resourceType, uint64_t value) 
 	msg.addByte(0xEE);
 	msg.addByte(resourceType);
 	msg.add<uint64_t>(value);
+	writeToOutputBuffer(msg);
+}
+
+void ProtocolGame::sendTaskBoardResource(Resource_t resourceType, uint32_t value) {
+	if (oldProtocol) {
+		return;
+	}
+
+	NetworkMessage msg;
+	msg.addByte(0xEE);
+	msg.addByte(resourceType);
+	msg.add<uint32_t>(value);
 	writeToOutputBuffer(msg);
 }
 
@@ -7528,6 +7541,7 @@ void ProtocolGame::sendAddCreature(const std::shared_ptr<Creature> &creature, co
 	sendPreyPrices();
 	player->sendPreyData();
 	player->sendTaskHuntingData();
+	player->taskBoard().onLogin();
 	sendForgingData();
 
 	// gameworld light-settings
@@ -8381,10 +8395,7 @@ void ProtocolGame::sendPreyPrices() {
 	if (!oldProtocol) {
 		msg.addByte(static_cast<uint8_t>(g_configManager().getNumber(PREY_BONUS_REROLL_PRICE)));
 		msg.addByte(static_cast<uint8_t>(g_configManager().getNumber(PREY_SELECTION_LIST_PRICE)));
-		msg.add<uint32_t>(player->getTaskHuntingRerollPrice());
-		msg.add<uint32_t>(player->getTaskHuntingRerollPrice());
-		msg.addByte(static_cast<uint8_t>(g_configManager().getNumber(TASK_HUNTING_SELECTION_LIST_PRICE)));
-		msg.addByte(static_cast<uint8_t>(g_configManager().getNumber(TASK_HUNTING_BONUS_REROLL_PRICE)));
+		// Task hunting prices are not sent with the Task Board protocol
 	}
 
 	writeToOutputBuffer(msg);

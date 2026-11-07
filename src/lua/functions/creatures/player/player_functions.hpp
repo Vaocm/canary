@@ -414,6 +414,10 @@ class PlayerFunctions {
 	static int luaPlayerSetVirtue(lua_State* L);
 	static int luaPlayerGetVirtue(lua_State* L);
 	static int luaPlayerGetSeStance(lua_State* L);
+	static int luaPlayerGetBountyLootPercentage(lua_State* L);
+	static int luaPlayerSetWeeklyTaskExpansion(lua_State* L);
+	static int luaPlayerAddBountyPoints(lua_State* L);
+	static int luaPlayerAddSoulseals(lua_State* L);
 	static int luaPlayerSetSeStance(lua_State* L);
 	static int luaPlayerFillHarmony(lua_State* L);
 	static int luaPlayerGetHarmony(lua_State* L);

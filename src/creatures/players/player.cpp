@@ -118,6 +118,7 @@ Player::Player() :
 	m_playerCyclopedia(*this),
 	m_playerTitle(*this),
 	m_playerVIP(*this),
+	m_playerTaskBoard(*this),
 	m_animusMastery(*this),
 	m_playerAttachedEffects(*this),
 	m_storage(*this),
@@ -136,6 +137,7 @@ Player::Player(std::shared_ptr<ProtocolGame> p) :
 	m_playerCyclopedia(*this),
 	m_playerTitle(*this),
 	m_playerVIP(*this),
+	m_playerTaskBoard(*this),
 	m_animusMastery(*this),
 	m_playerAttachedEffects(*this),
 	m_storage(*this),
@@ -6467,6 +6469,10 @@ void Player::addBestiaryKill(const std::shared_ptr<MonsterType> &mType) {
 	if (isConcoctionActive(Concoction_t::BestiaryBetterment)) {
 		kills *= 2;
 	}
+	// Bounty Talisman: chance for double bestiary progress on the active bounty task creature
+	if (m_taskBoardDoubleBestiary) {
+		kills *= 2;
+	}
 	g_iobestiary().addBestiaryKill(getPlayer(), mType, kills);
 }
 
@@ -6503,7 +6509,12 @@ bool Player::onKilledMonster(const std::shared_ptr<Monster> &monster) {
 	}
 	if (!monster->getSoulPit()) {
 		addHuntingTaskKill(mType);
+		// Count the bounty/weekly task kill first, so the double bestiary talisman sees the active task
+		const auto doubleBestiaryChance = taskBoard().getDoubleBestiaryPercent(mType->info.raceid);
+		taskBoard().onMonsterKilled(mType);
+		m_taskBoardDoubleBestiary = doubleBestiaryChance > 0.0 && boolean_random(doubleBestiaryChance / 100.0);
 		addBestiaryKill(mType);
+		m_taskBoardDoubleBestiary = false;
 		addBosstiaryKill(mType);
 	}
 	return false;
@@ -10349,11 +10360,6 @@ std::vector<uint16_t> Player::getTaskHuntingBlackList() const {
 void Player::sendTaskHuntingData() const {
 	if (client) {
 		client->sendResourcesBalance(getMoney(), getBankBalance(), getPreyCards(), getTaskHuntingPoints());
-		for (const std::unique_ptr<TaskHuntingSlot> &slot : taskHunting) {
-			if (slot) {
-				client->sendTaskHuntingData(slot);
-			}
-		}
 	}
 }
 
@@ -12485,6 +12491,14 @@ PlayerVIP &Player::vip() {
 
 const PlayerVIP &Player::vip() const {
 	return m_playerVIP;
+}
+
+PlayerTaskBoard &Player::taskBoard() {
+	return m_playerTaskBoard;
+}
+
+const PlayerTaskBoard &Player::taskBoard() const {
+	return m_playerTaskBoard;
 }
 
 // Animus Mastery interface

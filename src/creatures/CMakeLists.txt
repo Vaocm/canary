@@ -31,6 +31,7 @@ target_sources(
             players/components/player_cyclopedia.cpp
             players/components/player_forge_history.cpp
             players/components/player_storage.cpp
+            players/components/player_taskboard.cpp
             players/components/player_title.cpp
             players/components/wheel/player_wheel.cpp
             players/components/player_vip.cpp

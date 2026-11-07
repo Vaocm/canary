@@ -822,6 +822,12 @@ void Combat::CombatHealthFunc(const std::shared_ptr<Creature> &caster, const std
 			damage.secondary.value += static_cast<int32_t>(std::ceil((damage.secondary.value * slot->bonusPercentage) / 100));
 		}
 
+		// Bounty Talisman: bonus damage against the active bounty task creature
+		if (const auto bountyDamage = attackerPlayer->taskBoard().getDamagePercent(targetMonster->getRaceId()); bountyDamage > 0.0) {
+			damage.primary.value += static_cast<int32_t>(std::ceil((damage.primary.value * bountyDamage) / 100));
+			damage.secondary.value += static_cast<int32_t>(std::ceil((damage.secondary.value * bountyDamage) / 100));
+		}
+
 		attackerPlayer->weaponProficiency().applyBestiaryDamage(damage, targetMonster);
 		attackerPlayer->weaponProficiency().applyPowerfulFoeDamage(damage, targetMonster);
 

@@ -28,6 +28,7 @@
 #include "creatures/players/components/player_title.hpp"
 #include "creatures/players/components/wheel/player_wheel.hpp"
 #include "creatures/players/components/player_vip.hpp"
+#include "creatures/players/components/player_taskboard.hpp"
 #include "creatures/players/components/wheel/wheel_gems.hpp"
 #include "creatures/players/components/player_attached_effects.hpp"
 #include "creatures/players/components/weapon_proficiency.hpp"
@@ -1521,6 +1522,10 @@ public:
 	PlayerVIP &vip();
 	const PlayerVIP &vip() const;
 
+	// Player task board interface (bounty, weekly tasks, hunting task shop)
+	PlayerTaskBoard &taskBoard();
+	const PlayerTaskBoard &taskBoard() const;
+
 	// Player animusMastery interface
 	AnimusMastery &animusMastery();
 	const AnimusMastery &animusMastery() const;
@@ -1944,6 +1949,7 @@ private:
 	friend class PlayerCyclopedia;
 	friend class PlayerTitle;
 	friend class PlayerVIP;
+	friend class PlayerTaskBoard;
 	friend class PlayerAttachedEffects;
 	friend class PlayerStorage;
 	friend class PlayerForgeHistory;
@@ -1954,6 +1960,8 @@ private:
 	PlayerCyclopedia m_playerCyclopedia;
 	PlayerTitle m_playerTitle;
 	PlayerVIP m_playerVIP;
+	PlayerTaskBoard m_playerTaskBoard;
+	bool m_taskBoardDoubleBestiary = false;
 	AnimusMastery m_animusMastery;
 	PlayerAttachedEffects m_playerAttachedEffects;
 	PlayerStorage m_storage;
