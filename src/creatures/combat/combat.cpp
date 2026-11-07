@@ -745,8 +745,39 @@ void Combat::CombatHealthFunc(const std::shared_ptr<Creature> &caster, const std
 				damage.primary.value *= targetPlayer->getBuff(BUFF_HEALINGRECEIVED) / 100.;
 			}
 
+			// Soul Eater: Shared Conservation stance, +10% self-healing
+			if (targetPlayer == attackerPlayer && attackerPlayer->hasSeStance(SeStance::SharedConservation)) {
+				damage.primary.value *= 1.10;
+			}
+
 			if (params.origin != ORIGIN_HARMONY && attackerPlayer->getVirtue() == Virtue_t::Sustain && attackerPlayer->getPlayerVocationEnum() == VOCATION_MONK_CIP) {
 				damage.primary.value *= attackerPlayer->hasCondition(CONDITION_SERENE) ? 1.70 : 1.35;
+			}
+
+			// Soul Eater: Shared Conservation stance. Heal Friend and Nature's Embrace also heal a secondary target for 30% of the healing:
+			// the party member in the game window with the lowest health that is not the original target.
+			if (targetPlayer && attackerPlayer->hasSeStance(SeStance::SharedConservation) && (damage.instantSpellName == "Heal Friend" || damage.instantSpellName == "Nature's Embrace")) {
+				std::shared_ptr<Player> secondaryTarget;
+				if (const auto &party = attackerPlayer->getParty()) {
+					for (const auto &member : party->getPlayers()) {
+						if (!member || member->isRemoved() || member->isDead() || member == targetPlayer) {
+							continue;
+						}
+						if (member->getPosition().z != attackerPlayer->getPosition().z || !Position::areInRange<MAP_MAX_CLIENT_VIEW_PORT_X, MAP_MAX_CLIENT_VIEW_PORT_Y, 0>(attackerPlayer->getPosition(), member->getPosition())) {
+							continue;
+						}
+						if (!secondaryTarget || member->getHealth() * secondaryTarget->getMaxHealth() < secondaryTarget->getHealth() * member->getMaxHealth()) {
+							secondaryTarget = member;
+						}
+					}
+				}
+				if (secondaryTarget && secondaryTarget->getHealth() < secondaryTarget->getMaxHealth()) {
+					CombatDamage secondaryHeal;
+					secondaryHeal.primary.type = COMBAT_HEALING;
+					secondaryHeal.primary.value = std::max<int32_t>(1, static_cast<int32_t>(std::lround(damage.primary.value * 0.30)));
+					secondaryHeal.origin = ORIGIN_SPELL;
+					g_game().combatChangeHealth(attackerPlayer, secondaryTarget, secondaryHeal);
+				}
 			}
 		} else if (damage.origin == ORIGIN_FIST || damage.origin == ORIGIN_RANGED) {
 			damage.primary.value *= attackerPlayer->getBuff(BUFF_AUTOATTACKDEALT) / 100.;
@@ -2514,6 +2545,11 @@ void Combat::applyExtensions(const std::shared_ptr<Creature> &caster, const std:
 	if (player) {
 		uint16_t baseChance = player->getSkillLevel(SKILL_CRITICAL_HIT_CHANCE) + player->getBaseCritical().chance * 10000;
 		int32_t baseBonus = player->getSkillLevel(SKILL_CRITICAL_HIT_DAMAGE) + player->getBaseCritical().damage * 10000;
+
+		// Soul Eater: Sorcerer elemental stances (Master of Decay / Flames / Thunder) - spells only, not runes
+		if (params.origin == ORIGIN_SPELL) {
+			player->seStanceSpellAdjust(damage, baseChance, baseBonus);
+		}
 
 		uint16_t lowBlowRaceid = player->parseRacebyCharm(CHARM_LOW);
 		uint16_t savageBlowRaceid = player->parseRacebyCharm(CHARM_SAVAGE);

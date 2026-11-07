@@ -7608,6 +7608,18 @@ bool Game::combatBlockHit(CombatDamage &damage, const std::shared_ptr<Creature> 
 		return false;
 	}
 
+	// Soul Eater: Divine Defiance stance, 12% dodge against non-adjacent enemies
+	if (targetPlayer && attacker && targetPlayer->hasSeStance(SeStance::DivineDefiance)) {
+		const Position &seTargetPos = target->getPosition();
+		const Position &seAttackerPos = attacker->getPosition();
+		const bool seAdjacent = seTargetPos.z == seAttackerPos.z && std::max(Position::getDistanceX(seTargetPos, seAttackerPos), Position::getDistanceY(seTargetPos, seAttackerPos)) <= 1;
+		if (!seAdjacent && uniform_random(0, 10000) < 1200) {
+			InternalGame::sendBlockEffect(BLOCK_DODGE, damage.primary.type, target->getPosition(), attacker);
+			targetPlayer->sendTextMessage(MESSAGE_ATTENTION, "You dodged an attack.");
+			return true;
+		}
+	}
+
 	// Skill dodge (ruse)
 	if (targetPlayer) {
 		auto chance = targetPlayer->getDodgeChance();
@@ -8289,6 +8301,57 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 			damage.primary.value *= target->getBuff(BUFF_DAMAGERECEIVED) / 100.;
 			damage.secondary.value *= target->getBuff(BUFF_DAMAGERECEIVED) / 100.;
 		}
+		// Soul Eater: stance spells (Vocation Adjustments 2026)
+		if (damage.origin != ORIGIN_NONE && damage.origin != ORIGIN_CONDITION && damage.primary.type != COMBAT_HEALING) {
+			const int64_t seNow = OTSYS_TIME();
+			double seMultiplier = 1.0;
+			if (attackerPlayer && attackerPlayer->hasSeStance(SeStance::Protector)) {
+				seMultiplier *= 0.85; // Protector: 15% less damage dealt
+			}
+			if (targetPlayer) {
+				if (targetPlayer->hasSeStance(SeStance::BloodRage)) {
+					seMultiplier *= 1.15; // Blood Rage: 15% more damage taken
+				}
+				if (targetPlayer->hasSeStance(SeStance::Protector)) {
+					seMultiplier *= 0.85; // Protector: 15% less damage taken
+				}
+			}
+			if (attacker && attacker->seSapUntil > seNow) {
+				seMultiplier *= 0.90; // Sap Strength: the sapped creature deals 10% less damage
+			}
+			if (seMultiplier != 1.0) {
+				damage.primary.value = static_cast<int32_t>(std::lround(damage.primary.value * seMultiplier));
+				damage.secondary.value = static_cast<int32_t>(std::lround(damage.secondary.value * seMultiplier));
+			}
+
+			// Expose Weakness: attackers pierce 8% of the monster's elemental resistance
+			if (targetMonster && target->seExposeUntil > seNow) {
+				const auto &seMonsterType = targetMonster->getMonsterType();
+				const auto pierce = [&](auto &part) {
+					if (!seMonsterType || part.type == COMBAT_PHYSICALDAMAGE || part.type == COMBAT_HEALING || part.type == COMBAT_NONE) {
+						return;
+					}
+					const auto it = seMonsterType->info.elementMap.find(part.type);
+					if (it == seMonsterType->info.elementMap.end() || it->second <= 0 || it->second >= 100) {
+						return;
+					}
+					const int32_t resistance = it->second;
+					part.value = static_cast<int32_t>(std::lround(part.value * static_cast<double>(100 - std::max(0, resistance - 8)) / static_cast<double>(100 - resistance)));
+				};
+				pierce(damage.primary);
+				pierce(damage.secondary);
+			}
+
+			// Aura of Sapped Strength / Exposed Weakness: spells, runes and auto attacks mark the target for 10 seconds
+			if (attackerPlayer && target != attacker && (damage.origin == ORIGIN_SPELL || damage.origin == ORIGIN_MELEE || damage.origin == ORIGIN_RANGED || damage.origin == ORIGIN_FIST)) {
+				if (attackerPlayer->getSeStance(1) == SeStance::SappedStrength) {
+					target->seSapUntil = seNow + 10000;
+				} else if (attackerPlayer->getSeStance(1) == SeStance::ExposedWeakness) {
+					target->seExposeUntil = seNow + 10000;
+				}
+			}
+		}
+
 		auto healthChange = damage.primary.value + damage.secondary.value;
 		if (healthChange == 0) {
 			return true;

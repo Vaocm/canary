@@ -602,28 +602,8 @@ uint16_t Player::calculateFlatDamageHealing() const {
 }
 
 uint16_t Player::attackTotal(uint16_t flatBonus, uint16_t equipment, uint16_t skill) const {
-	double fightFactor = 0;
-	switch (fightMode) {
-		case FIGHTMODE_ATTACK: {
-			fightFactor = 1.2f * equipment;
-			break;
-		}
-
-		case FIGHTMODE_BALANCED: {
-			fightFactor = 1.0f * equipment;
-			break;
-		}
-
-		case FIGHTMODE_DEFENSE: {
-			fightFactor = 0.6f * equipment;
-			break;
-		}
-
-		default: {
-			fightFactor = 1.0f * equipment;
-			break;
-		}
-	}
+	// Soul Eater: combat modes are gone (Vocation Adjustments 2026): the +20% attack of the old offensive mode is always on.
+	double fightFactor = 1.2f * equipment;
 
 	fightFactor = std::floor(fightFactor);
 
@@ -734,25 +714,8 @@ float Player::getMitigation() const {
 }
 
 double Player::getCombatTacticsMitigation() const {
-	double fightFactor = 0.0;
-	switch (fightMode) {
-		case FIGHTMODE_ATTACK: {
-			fightFactor = 0.8f;
-			break;
-		}
-		case FIGHTMODE_BALANCED: {
-			fightFactor = 1.0f;
-			break;
-		}
-		case FIGHTMODE_DEFENSE: {
-			fightFactor = 1.2f;
-			break;
-		}
-		default:
-			break;
-	}
-
-	return fightFactor;
+	// Soul Eater: no combat modes, neutral factor (old balanced value)
+	return 1.0;
 }
 
 int32_t Player::getDefense(bool sendToClient /* = false*/) const {
@@ -782,13 +745,7 @@ int32_t Player::getDefense(bool sendToClient /* = false*/) const {
 	defenseValue += weaponProficiency().getStat(WeaponProficiencyBonus_t::WEAPON_SHIELD_MODIFIER);
 
 	if (defenseSkill == 0) {
-		switch (fightMode) {
-			case FIGHTMODE_ATTACK:
-			case FIGHTMODE_BALANCED:
-				return 1;
-			case FIGHTMODE_DEFENSE:
-				return 2;
-		}
+		return 1;
 	}
 
 	auto defenseScalingFactor = shield ? 0.16f : (weapon && weapon->getDefense() > 0 ? 0.146f : 0.15f);
@@ -820,37 +777,17 @@ uint16_t Player::getDefenseEquipment() const {
 }
 
 float Player::getAttackFactor() const {
-	switch (fightMode) {
-		case FIGHTMODE_ATTACK:
-			return 1.0f;
-		case FIGHTMODE_BALANCED:
-			return 0.75f;
-		case FIGHTMODE_DEFENSE:
-			return 0.5f;
-		default:
-			return 1.0f;
-	}
+	// Soul Eater: always the former full-attack factor (no combat modes, no defensive attack penalty)
+	return 1.0f;
 }
 
 float Player::getDefenseFactor(bool sendToClient /* = false*/) const {
-	switch (fightMode) {
-		case FIGHTMODE_ATTACK:
-			if (sendToClient) {
-				return 0.5f;
-			}
-
-			return (OTSYS_TIME() - lastAttack) < getAttackSpeed() ? 0.5f : 1.0f;
-		case FIGHTMODE_BALANCED:
-			if (sendToClient) {
-				return 0.75f;
-			}
-
-			return (OTSYS_TIME() - lastAttack) < getAttackSpeed() ? 0.75f : 1.0f;
-		case FIGHTMODE_DEFENSE:
-			return 1.0f;
-		default:
-			return 1.0f;
+	// Soul Eater: no combat modes; defense behaves like the former balanced mode
+	if (sendToClient) {
+		return 0.75f;
 	}
+
+	return (OTSYS_TIME() - lastAttack) < getAttackSpeed() ? 0.75f : 1.0f;
 }
 
 std::vector<double> Player::getDamageAccuracy(const ItemType &it) const {
@@ -7359,6 +7296,15 @@ uint16_t Player::getSkillLevel(skills_t skill) const {
 	const auto weaponProficiencySkill = m_weaponProficiency.getSkillBonus(skill);
 	skillLevel += weaponProficiencySkill;
 
+	// Soul Eater stances: percent bonus on the total skill (gear and buffs included)
+	if (seStance[0] == SeStance::BloodRage && (skill == SKILL_SWORD || skill == SKILL_CLUB || skill == SKILL_AXE)) {
+		skillLevel = skillLevel * 125 / 100;
+	} else if (seStance[0] == SeStance::Protector && skill == SKILL_SHIELD) {
+		skillLevel = skillLevel * 130 / 100;
+	} else if (seStance[0] == SeStance::Sharpshooter && skill == SKILL_DISTANCE) {
+		skillLevel = skillLevel * 132 / 100;
+	}
+
 	const int32_t avatarCritChance = m_wheelPlayer.checkAvatarSkill(WheelAvatarSkill_t::CRITICAL_CHANCE);
 	if (skill == SKILL_CRITICAL_HIT_CHANCE && avatarCritChance > 0) {
 		skillLevel = avatarCritChance; // 100%
@@ -7453,6 +7399,12 @@ int32_t Player::getSpecializedMagicLevel(CombatType_t combat, bool useCharges) c
 	int32_t result = specializedMagicLevel[combatTypeToIndex(combat)];
 	result += m_wheelPlayer.getSpecializedMagic(combat);
 	result += m_weaponProficiency.getSpecializedMagic(combat);
+	// Soul Eater stances
+	if (seStance[0] == SeStance::DivineDefiance && (combat == COMBAT_HOLYDAMAGE || combat == COMBAT_HEALING)) {
+		result += static_cast<int32_t>(getSkillLevel(SKILL_DISTANCE)) * 6 / 100;
+	} else if (seStance[0] == SeStance::ElementalSynthesis && (combat == COMBAT_ICEDAMAGE || combat == COMBAT_EARTHDAMAGE)) {
+		result += static_cast<int32_t>(getMagicLevel()) * 10 / 100;
+	}
 	for (const auto &item : getEquippedItems()) {
 		const ItemType &itemType = Item::items[item->getID()];
 		if (!itemType.abilities) {
@@ -12968,6 +12920,72 @@ const BaseCritical &Player::getBaseCritical() const {
 	return baseCritical;
 }
 
+void Player::setSeStance(uint8_t slot, uint8_t id) {
+	if (slot >= 2 || seStance[slot] == id) {
+		return;
+	}
+
+	seStance[slot] = id;
+	// switching a stance removes any pending element conversion
+	seElementArmed = false;
+	seConvertThisCast = false;
+	sendSkills();
+}
+
+void Player::seStanceSpellAdjust(CombatDamage &damage, uint16_t &critChance, int32_t &critBonus) {
+	CombatType_t element;
+	switch (seStance[0]) {
+		case SeStance::MasterDecay:
+			element = COMBAT_DEATHDAMAGE;
+			break;
+		case SeStance::MasterFlames:
+			element = COMBAT_FIREDAMAGE;
+			break;
+		case SeStance::MasterThunder:
+			element = COMBAT_ENERGYDAMAGE;
+			break;
+		default:
+			return;
+	}
+
+	// first damage of a new spell cast: the conversion armed by an earlier cast is used up by this cast
+	if (seSeenCastId != seCastId) {
+		seSeenCastId = seCastId;
+		seConvertThisCast = seElementArmed;
+		seElementArmed = false;
+	}
+
+	const auto isConvertible = [](CombatType_t type) {
+		return type == COMBAT_PHYSICALDAMAGE || type == COMBAT_EARTHDAMAGE || type == COMBAT_FIREDAMAGE || type == COMBAT_ENERGYDAMAGE || type == COMBAT_ICEDAMAGE || type == COMBAT_HOLYDAMAGE || type == COMBAT_DEATHDAMAGE;
+	};
+
+	if (damage.primary.type == element) {
+		// natural damage of the stance element
+		seElementArmed = true;
+		switch (seStance[0]) {
+			case SeStance::MasterFlames:
+				damage.primary.value = static_cast<int32_t>(std::lround(damage.primary.value * 1.04));
+				if (damage.secondary.type == element) {
+					damage.secondary.value = static_cast<int32_t>(std::lround(damage.secondary.value * 1.04));
+				}
+				break;
+			case SeStance::MasterThunder:
+				critChance = static_cast<uint16_t>(std::min<int32_t>(10000, critChance + 400));
+				break;
+			case SeStance::MasterDecay:
+				critBonus += 3000;
+				break;
+			default:
+				break;
+		}
+	} else if (seConvertThisCast && isConvertible(damage.primary.type)) {
+		damage.primary.type = element;
+		if (isConvertible(damage.secondary.type)) {
+			damage.secondary.type = element;
+		}
+	}
+}
+
 Virtue_t Player::getVirtue() const {
 	return virtue;
 }
@@ -13056,11 +13074,11 @@ double_t Player::getHarmonyBonus() {
 		return 1;
 	}
 
-	// Soul Eater: real Tibia (Sep 2026): base 7% + 0.005% per level; Virtue of Harmony +50% (+100% while Serene)
+	// Soul Eater: base 7% + 0.005% per level; Virtue of Harmony adds 3% to the base bonus (6% while Serene)
 	double_t harmonyBaseBonus = 7. + 0.005 * getLevel();
 
 	if (virtue == Virtue_t::Harmony) {
-		harmonyBaseBonus *= hasCondition(CONDITION_SERENE) ? 2.0 : 1.5;
+		harmonyBaseBonus += hasCondition(CONDITION_SERENE) ? 6. : 3.;
 	}
 
 	harmonyBaseBonus += m_wheelPlayer.getStage(WheelStage_t::ASCETIC);

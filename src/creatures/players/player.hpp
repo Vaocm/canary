@@ -203,6 +203,20 @@ public:
 	 */
 	Virtue_t getVirtue() const;
 
+	// Soul Eater stance spells. Slot 0 = main stance (one per character), slot 1 = Sorcerer crippling stance.
+	uint8_t getSeStance(uint8_t slot) const {
+		return slot < 2 ? seStance[slot] : 0;
+	}
+	void setSeStance(uint8_t slot, uint8_t id);
+	bool hasSeStance(uint8_t id) const {
+		return seStance[0] == id || seStance[1] == id;
+	}
+	void seNewSpellCast() {
+		++seCastId;
+	}
+	// called for every damaging spell before critical hits are rolled (Sorcerer elemental stances)
+	void seStanceSpellAdjust(CombatDamage &damage, uint16_t &critChance, int32_t &critBonus);
+
 	/**
 	 * @brief Sets the player's virtue.
 	 * @param virtue The virtue to set.
@@ -1677,6 +1691,11 @@ private:
 
 	uint8_t harmony = 0;
 	Virtue_t virtue = Virtue_t::None;
+	uint8_t seStance[2] = { 0, 0 };
+	uint32_t seCastId = 0;
+	uint32_t seSeenCastId = 0;
+	bool seElementArmed = false; // a natural spell of the stance element was cast: the next non-element spell is converted
+	bool seConvertThisCast = false;
 	std::unordered_set<uint16_t> aimAtTargetSpellIds;
 
 	std::string name;

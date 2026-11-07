@@ -46,6 +46,24 @@ enum class MonkSpell_t : uint8_t {
  * @brief Represents the Monk Virtue types.
  * @note Do not change the order. It is hardcoded in CipSoft's client.
  */
+/**
+ * @brief Soul Eater: stance spells (Vocation Adjustments 2026). Plain ids so scripts can store them.
+ */
+namespace SeStance {
+	constexpr uint8_t None = 0;
+	constexpr uint8_t BloodRage = 1; // Knight
+	constexpr uint8_t Protector = 2; // Knight
+	constexpr uint8_t DivineDefiance = 3; // Paladin
+	constexpr uint8_t Sharpshooter = 4; // Paladin
+	constexpr uint8_t ExposedWeakness = 5; // Sorcerer (crippling slot)
+	constexpr uint8_t SappedStrength = 6; // Sorcerer (crippling slot)
+	constexpr uint8_t MasterDecay = 7; // Sorcerer (elemental slot)
+	constexpr uint8_t MasterFlames = 8; // Sorcerer (elemental slot)
+	constexpr uint8_t MasterThunder = 9; // Sorcerer (elemental slot)
+	constexpr uint8_t ElementalSynthesis = 10; // Druid
+	constexpr uint8_t SharedConservation = 11; // Druid
+}
+
 enum class Virtue_t : uint8_t {
 	None = 0x00, ///< No virtue selected.
 	Harmony = 0x01, ///< Virtue of balance and unity.

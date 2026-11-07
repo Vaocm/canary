@@ -497,6 +497,8 @@ void PlayerFunctions::init(lua_State* L) {
 	Lua::registerMethod(L, "Player", "setSerene", PlayerFunctions::luaPlayerSetSerene);
 	Lua::registerMethod(L, "Player", "getVirtue", PlayerFunctions::luaPlayerGetVirtue);
 	Lua::registerMethod(L, "Player", "setVirtue", PlayerFunctions::luaPlayerSetVirtue);
+	Lua::registerMethod(L, "Player", "getSeStance", PlayerFunctions::luaPlayerGetSeStance);
+	Lua::registerMethod(L, "Player", "setSeStance", PlayerFunctions::luaPlayerSetSeStance);
 	Lua::registerMethod(L, "Player", "fillHarmony", PlayerFunctions::luaPlayerFillHarmony);
 	Lua::registerMethod(L, "Player", "getHarmony", PlayerFunctions::luaPlayerGetHarmony);
 	Lua::registerMethod(L, "Player", "getHarmonyDamage", PlayerFunctions::luaPlayerGetHarmonyDamage);
@@ -5454,6 +5456,31 @@ int PlayerFunctions::luaCalculateFlatDamageHealing(lua_State* L) {
 	}
 
 	lua_pushnumber(L, player->calculateFlatDamageHealing());
+	return 1;
+}
+
+int PlayerFunctions::luaPlayerGetSeStance(lua_State* L) {
+	// player:getSeStance(slot) -- slot 0 = main stance, slot 1 = Sorcerer crippling stance
+	const auto &player = Lua::getUserdataShared<Player>(L, 1, "Player");
+	if (!player) {
+		Lua::reportErrorFunc(Lua::getErrorDesc(LUA_ERROR_PLAYER_NOT_FOUND));
+		return 1;
+	}
+
+	lua_pushnumber(L, player->getSeStance(Lua::getNumber<uint8_t>(L, 2, 0)));
+	return 1;
+}
+
+int PlayerFunctions::luaPlayerSetSeStance(lua_State* L) {
+	// player:setSeStance(slot, stanceId)
+	const auto &player = Lua::getUserdataShared<Player>(L, 1, "Player");
+	if (!player) {
+		Lua::reportErrorFunc(Lua::getErrorDesc(LUA_ERROR_PLAYER_NOT_FOUND));
+		return 1;
+	}
+
+	player->setSeStance(Lua::getNumber<uint8_t>(L, 2, 0), Lua::getNumber<uint8_t>(L, 3, 0));
+	Lua::pushBoolean(L, true);
 	return 1;
 }
 

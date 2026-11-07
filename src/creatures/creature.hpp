@@ -477,6 +477,10 @@ public:
 	virtual int32_t getDefense(bool = false) const {
 		return 0;
 	}
+	// Soul Eater: Sorcerer crippling stances (end time in ms)
+	int64_t seSapUntil = 0;
+	int64_t seExposeUntil = 0;
+
 	virtual float getAttackFactor() const {
 		return 1.0f;
 	}
