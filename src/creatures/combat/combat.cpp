@@ -760,7 +760,7 @@ void Combat::CombatHealthFunc(const std::shared_ptr<Creature> &caster, const std
 				std::shared_ptr<Player> secondaryTarget;
 				if (const auto &party = attackerPlayer->getParty()) {
 					for (const auto &member : party->getPlayers()) {
-						if (!member || member->isRemoved() || member->isDead() || member == targetPlayer) {
+						if (!member || member->isRemoved() || member->getHealth() <= 0 || member == targetPlayer) {
 							continue;
 						}
 						if (member->getPosition().z != attackerPlayer->getPosition().z || !Position::areInRange<MAP_MAX_CLIENT_VIEW_PORT_X, MAP_MAX_CLIENT_VIEW_PORT_Y, 0>(attackerPlayer->getPosition(), member->getPosition())) {
