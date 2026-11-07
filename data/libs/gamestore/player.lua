@@ -103,9 +103,9 @@ local function canBuyOffer(self, offer)
 				disabledReason = "You already have charm expansion."
 			end
 		elseif offer.type == GameStore.OfferTypes.OFFER_TYPE_HUNTINGSLOT then
-			if self:taskHuntingThirdSlot() then
+			if self:hasWeeklyTaskExpansion() then
 				disabled = 1
-				disabledReason = "You already have 3 slots released."
+				disabledReason = "You already have the weekly task expansion."
 			end
 		elseif offer.type == GameStore.OfferTypes.OFFER_TYPE_PREYSLOT then
 			if self:preyThirdSlot() then

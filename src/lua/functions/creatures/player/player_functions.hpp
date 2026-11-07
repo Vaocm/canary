@@ -416,6 +416,7 @@ class PlayerFunctions {
 	static int luaPlayerGetSeStance(lua_State* L);
 	static int luaPlayerGetBountyLootPercentage(lua_State* L);
 	static int luaPlayerSetWeeklyTaskExpansion(lua_State* L);
+	static int luaPlayerHasWeeklyTaskExpansion(lua_State* L);
 	static int luaPlayerAddBountyPoints(lua_State* L);
 	static int luaPlayerAddSoulseals(lua_State* L);
 	static int luaPlayerSetSeStance(lua_State* L);

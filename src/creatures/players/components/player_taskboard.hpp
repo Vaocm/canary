@@ -143,6 +143,7 @@ public:
 	uint32_t getBountyPoints();
 	uint32_t getSoulseals();
 	uint32_t getPromotionPoints();
+	uint64_t getPointsSpent();
 	bool hasWeeklyExpansion();
 	void setWeeklyExpansion(bool value);
 	void addBountyPoints(uint32_t amount);
@@ -181,6 +182,8 @@ private:
 		uint8_t promotionBought = 0;
 		bool weeklyExpansion = false;
 		std::vector<uint8_t> shopBought; // purchased one-time offers (indices into catalog)
+		uint64_t pointsSpent = 0; // lifetime Hunting Task Points spent in the shop (character titles)
+		std::array<uint32_t, 3> completedTasks { 0, 0, 0 }; // weekly tasks completed: beginner, adept, expert+master (achievements)
 	};
 
 	void ensureLoaded();
@@ -210,6 +213,8 @@ private:
 	void deliverItem(uint8_t slot);
 	void updateDeliveryProgress();
 	void completeKillTask(TaskBoard::WeeklyKillTask &task);
+	void onWeeklyTaskCompleted();
+	void checkShopAchievements();
 	uint32_t countCompletedKillTasks() const;
 	uint32_t countCompletedDeliveryTasks() const;
 	uint32_t rewardMultiplier(uint32_t completed) const;

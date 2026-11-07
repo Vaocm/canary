@@ -500,6 +500,7 @@ void PlayerFunctions::init(lua_State* L) {
 	Lua::registerMethod(L, "Player", "getSeStance", PlayerFunctions::luaPlayerGetSeStance);
 	Lua::registerMethod(L, "Player", "getBountyLootPercentage", PlayerFunctions::luaPlayerGetBountyLootPercentage);
 	Lua::registerMethod(L, "Player", "setWeeklyTaskExpansion", PlayerFunctions::luaPlayerSetWeeklyTaskExpansion);
+	Lua::registerMethod(L, "Player", "hasWeeklyTaskExpansion", PlayerFunctions::luaPlayerHasWeeklyTaskExpansion);
 	Lua::registerMethod(L, "Player", "addBountyPoints", PlayerFunctions::luaPlayerAddBountyPoints);
 	Lua::registerMethod(L, "Player", "addSoulseals", PlayerFunctions::luaPlayerAddSoulseals);
 	Lua::registerMethod(L, "Player", "setSeStance", PlayerFunctions::luaPlayerSetSeStance);
@@ -5485,6 +5486,18 @@ int PlayerFunctions::luaPlayerSetWeeklyTaskExpansion(lua_State* L) {
 
 	player->taskBoard().setWeeklyExpansion(Lua::getBoolean(L, 2, true));
 	Lua::pushBoolean(L, true);
+	return 1;
+}
+
+int PlayerFunctions::luaPlayerHasWeeklyTaskExpansion(lua_State* L) {
+	// player:hasWeeklyTaskExpansion()
+	const auto &player = Lua::getUserdataShared<Player>(L, 1, "Player");
+	if (!player) {
+		Lua::reportErrorFunc(Lua::getErrorDesc(LUA_ERROR_PLAYER_NOT_FOUND));
+		return 1;
+	}
+
+	Lua::pushBoolean(L, player->taskBoard().hasWeeklyExpansion());
 	return 1;
 }
 

@@ -172,6 +172,9 @@ local function parseRequestStoreOffers(playerId, msg)
 
 		if subAction == GameStore.SubActions.PREY_THIRDSLOT_REAL then
 			offerId = GameStore.SubActions.PREY_THIRDSLOT_REDIRECT
+		elseif subAction == 13 or subAction == 16 then
+			-- client StoreConst.TASKHUNTING_THIRDSLOT / WEEKLY_TASK_EXPANSION (Task Board "unlock permanently")
+			offerId = GameStore.SubActions.TASKHUNTING_THIRDSLOT
 		end
 		if category then
 			addPlayerEvent(sendShowStoreOffers, 50, playerId, category, offerId)

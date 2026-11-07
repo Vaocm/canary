@@ -265,7 +265,7 @@ bool PlayerTitle::checkLoginStreak(uint32_t amount) const {
 }
 
 bool PlayerTitle::checkTask(uint32_t amount) const {
-	return m_player.getTaskHuntingPoints() >= amount;
+	return m_player.taskBoard().getPointsSpent() >= amount;
 }
 
 bool PlayerTitle::checkMap(uint32_t) const {

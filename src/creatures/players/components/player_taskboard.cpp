@@ -514,6 +514,7 @@ std::string PlayerTaskBoard::serialize() const {
 	for (const auto b : s.shopBought) {
 		out << static_cast<int>(b) << ' ';
 	}
+	out << s.pointsSpent << ' ' << s.completedTasks[0] << ' ' << s.completedTasks[1] << ' ' << s.completedTasks[2] << ' ';
 	return out.str();
 }
 
@@ -598,6 +599,10 @@ bool PlayerTaskBoard::deserialize(const std::string &data) {
 	s.shopBought.clear();
 	for (size_t i = 0; i < boughtCount; ++i) {
 		s.shopBought.push_back(static_cast<uint8_t>(rd()));
+	}
+	s.pointsSpent = static_cast<uint64_t>(rd());
+	for (auto &c : s.completedTasks) {
+		c = static_cast<uint32_t>(rd());
 	}
 	return !in.fail();
 }
@@ -1184,6 +1189,7 @@ void PlayerTaskBoard::deliverItem(uint8_t slot) {
 	const auto xp = TaskBoard::getLevelExperienceReward(m_player.getLevel());
 	m_player.sendTextMessage(MESSAGE_EVENT_ADVANCE, "You have completed a weekly delivery task.");
 	m_player.addExperience(nullptr, xp, true);
+	onWeeklyTaskCompleted();
 	save();
 	sendWeeklyData();
 }
@@ -1195,6 +1201,44 @@ void PlayerTaskBoard::completeKillTask(TaskBoard::WeeklyKillTask &task) {
 	task.rewarded = true;
 	m_player.sendTextMessage(MESSAGE_EVENT_ADVANCE, "You have completed a weekly kill task.");
 	m_player.addExperience(nullptr, killTaskExperience(), true);
+	onWeeklyTaskCompleted();
+}
+
+void PlayerTaskBoard::onWeeklyTaskCompleted() {
+	const auto tier = m_state.weeklyDifficulty >= 2 ? 2 : m_state.weeklyDifficulty;
+	m_state.completedTasks[tier]++;
+	// Verminbane: 100 beginner tasks, Monsterhunter: 200 adept tasks, Taskmaster: 500 expert/master tasks
+	if (m_state.completedTasks[0] >= 100) {
+		m_player.achiev().add(502);
+	}
+	if (m_state.completedTasks[1] >= 200) {
+		m_player.achiev().add(503);
+	}
+	if (m_state.completedTasks[2] >= 500) {
+		m_player.achiev().add(504);
+	}
+}
+
+void PlayerTaskBoard::checkShopAchievements() {
+	const auto &shop = TaskBoard::Catalog::getInstance().getShop();
+	bool base = false;
+	bool addon1 = false;
+	bool addon2 = false;
+	for (size_t i = 0; i < shop.size(); ++i) {
+		if (!isOfferBought(i)) {
+			continue;
+		}
+		if (shop[i].type == TaskBoard::SHOP_OUTFIT) {
+			base = base || shop[i].addons == 0;
+			addon1 = addon1 || shop[i].addons == 1;
+			addon2 = addon2 || shop[i].addons == 2;
+		} else if (shop[i].type == TaskBoard::SHOP_MOUNT) {
+			m_player.achiev().add(507); // Steppe Elegance (Antelope)
+		}
+	}
+	if (base && addon1 && addon2) {
+		m_player.achiev().add(506); // Falconer
+	}
 }
 
 void PlayerTaskBoard::setWeeklyExpansion(bool value) {
@@ -1279,6 +1323,7 @@ void PlayerTaskBoard::onMonsterKilled(const std::shared_ptr<MonsterType> &mType)
 				m_state.anyRewarded = true;
 				m_player.sendTextMessage(MESSAGE_EVENT_ADVANCE, "You have completed a weekly kill task.");
 				m_player.addExperience(nullptr, killTaskExperience(), true);
+				onWeeklyTaskCompleted();
 			}
 		}
 		if (raceId != 0) {
@@ -1382,6 +1427,7 @@ void PlayerTaskBoard::buyOffer(uint8_t index) {
 			if (!m_player.useTaskHuntingPoints(cost)) {
 				return;
 			}
+			m_state.pointsSpent += cost;
 			m_state.promotionBought++;
 			m_player.sendTextMessage(MESSAGE_EVENT_ADVANCE, "You have purchased a Bonus Promotion Point for your Wheel of Destiny.");
 			break;
@@ -1390,6 +1436,7 @@ void PlayerTaskBoard::buyOffer(uint8_t index) {
 			if (!m_player.useTaskHuntingPoints(offer.price)) {
 				return;
 			}
+			m_state.pointsSpent += offer.price;
 			const uint8_t addonMask = offer.addons == 0 ? 0 : static_cast<uint8_t>(1 << (offer.addons - 1));
 			m_player.addOutfit(offer.lookTypeMale, addonMask);
 			m_player.addOutfit(offer.lookTypeFemale, addonMask);
@@ -1401,6 +1448,7 @@ void PlayerTaskBoard::buyOffer(uint8_t index) {
 			if (!m_player.useTaskHuntingPoints(offer.price)) {
 				return;
 			}
+			m_state.pointsSpent += offer.price;
 			m_player.tameMount(static_cast<uint8_t>(offer.mountId));
 			m_state.shopBought.push_back(index);
 			m_player.sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("You have purchased {}.", offer.title));
@@ -1423,10 +1471,13 @@ void PlayerTaskBoard::buyOffer(uint8_t index) {
 				m_player.sendCancelMessage("The item could not be delivered to your store inbox.");
 				return;
 			}
+			m_state.pointsSpent += offer.price;
 			m_player.sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("You have purchased {}. It was delivered to your store inbox.", offer.title));
 			break;
 		}
 	}
+	checkShopAchievements();
+	m_player.title().checkAndUpdateNewTitles();
 	save();
 	sendResources();
 	sendShopData();
@@ -1448,6 +1499,11 @@ uint32_t PlayerTaskBoard::getSoulseals() {
 uint32_t PlayerTaskBoard::getPromotionPoints() {
 	ensureLoaded();
 	return m_state.promotionBought;
+}
+
+uint64_t PlayerTaskBoard::getPointsSpent() {
+	ensureLoaded();
+	return m_state.pointsSpent;
 }
 
 bool PlayerTaskBoard::hasWeeklyExpansion() {

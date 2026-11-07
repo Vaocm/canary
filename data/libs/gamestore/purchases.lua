@@ -254,10 +254,10 @@ local function processPreyThirdSlot(player)
 end
 
 local function processTaskHuntingThirdSlot(player)
-	if player:taskHuntingThirdSlot() then
-		return error({ code = 1, message = "You already have unlocked all task hunting slots." })
+	if player:hasWeeklyTaskExpansion() then
+		return error({ code = 1, message = "You already have the permanent weekly task expansion." })
 	end
-	player:taskHuntingThirdSlot(true)
+	player:setWeeklyTaskExpansion(true)
 end
 
 local function processPreyBonusReroll(player, offerCount)
