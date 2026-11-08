@@ -30,6 +30,87 @@
 #include "creatures/players/player.hpp"
 #include "creatures/players/components/wheel/wheel_definitions.hpp"
 
+// Soul Eater: while a Sorcerer "Master" stance is active, every damage spell is converted to the stance element.
+// The damage type is converted in Player::seStanceSpellAdjust; this makes the spell LOOK like that element as well
+// (impact effect and projectile are swapped for the stance element's).
+namespace {
+	thread_local CombatType_t seFxElement = COMBAT_NONE;
+	thread_local bool seFxArea = false;
+
+	struct SeStanceEffectScope {
+		CombatType_t prevElement;
+		bool prevArea;
+		SeStanceEffectScope(const std::shared_ptr<Creature> &caster, CombatType_t spellType, CombatOrigin origin, bool area) :
+			prevElement(seFxElement), prevArea(seFxArea) {
+			if (!caster || origin != ORIGIN_SPELL) {
+				return;
+			}
+			const auto &player = caster->getPlayer();
+			if (!player) {
+				return;
+			}
+			CombatType_t element;
+			switch (player->getSeStance(0)) {
+				case SeStance::MasterDecay:
+					element = COMBAT_DEATHDAMAGE;
+					break;
+				case SeStance::MasterFlames:
+					element = COMBAT_FIREDAMAGE;
+					break;
+				case SeStance::MasterThunder:
+					element = COMBAT_ENERGYDAMAGE;
+					break;
+				default:
+					return;
+			}
+			const bool convertible = spellType == COMBAT_PHYSICALDAMAGE || spellType == COMBAT_EARTHDAMAGE || spellType == COMBAT_FIREDAMAGE || spellType == COMBAT_ENERGYDAMAGE || spellType == COMBAT_ICEDAMAGE || spellType == COMBAT_HOLYDAMAGE || spellType == COMBAT_DEATHDAMAGE;
+			if (!convertible || spellType == element) {
+				return;
+			}
+			seFxElement = element;
+			seFxArea = area;
+		}
+		~SeStanceEffectScope() {
+			seFxElement = prevElement;
+			seFxArea = prevArea;
+		}
+		SeStanceEffectScope(const SeStanceEffectScope &) = delete;
+		SeStanceEffectScope &operator=(const SeStanceEffectScope &) = delete;
+	};
+
+	uint16_t seStanceMagicEffect(uint16_t effect) {
+		if (seFxElement == COMBAT_NONE || effect == CONST_ME_NONE) {
+			return effect;
+		}
+		switch (seFxElement) {
+			case COMBAT_FIREDAMAGE:
+				return seFxArea ? CONST_ME_FIREAREA : CONST_ME_FIREATTACK;
+			case COMBAT_ENERGYDAMAGE:
+				return seFxArea ? CONST_ME_ENERGYAREA : CONST_ME_ENERGYHIT;
+			case COMBAT_DEATHDAMAGE:
+				return CONST_ME_MORTAREA;
+			default:
+				return effect;
+		}
+	}
+
+	uint16_t seStanceDistanceEffect(uint16_t effect) {
+		if (seFxElement == COMBAT_NONE || effect == CONST_ANI_NONE) {
+			return effect;
+		}
+		switch (seFxElement) {
+			case COMBAT_FIREDAMAGE:
+				return CONST_ANI_FIRE;
+			case COMBAT_ENERGYDAMAGE:
+				return CONST_ANI_ENERGY;
+			case COMBAT_DEATHDAMAGE:
+				return CONST_ANI_DEATH;
+			default:
+				return effect;
+		}
+	}
+} // namespace
+
 int32_t Combat::getLevelFormula(const std::shared_ptr<Player> &player, const std::shared_ptr<Spell> &wheelSpell, const CombatDamage &damage) const {
 	if (!player) {
 		return 0;
@@ -1077,6 +1158,7 @@ uint16_t Combat::monkEffectByElementalBond(CombatType_t combatType, uint16_t eff
 }
 
 void Combat::sendCombatEffect(const std::shared_ptr<Creature> &caster, const Position &position, uint16_t effect) {
+	effect = seStanceMagicEffect(effect);
 	const auto &casterPlayer = caster ? caster->getPlayer() : nullptr;
 
 	// If not a Monk player, use the original effect
@@ -1196,6 +1278,7 @@ void Combat::postCombatEffects(const std::shared_ptr<Creature> &caster, const Po
 }
 
 void Combat::addDistanceEffect(const std::shared_ptr<Creature> &caster, const Position &fromPos, const Position &toPos, uint16_t effect) {
+	effect = seStanceDistanceEffect(effect);
 	if (effect == CONST_ANI_WEAPONTYPE) {
 		if (!caster) {
 			return;
@@ -1571,6 +1654,7 @@ void Combat::doCombatHealth(const std::shared_ptr<Creature> &caster, const std::
 }
 
 void Combat::doCombatHealth(const std::shared_ptr<Creature> &caster, const std::shared_ptr<Creature> &target, const Position &origin, CombatDamage &damage, const CombatParams &params) {
+	SeStanceEffectScope seFxScope(caster, params.combatType, params.origin, false);
 	bool canCombat = !params.aggressive || (caster != target && Combat::canDoCombat(caster, target, params.aggressive) == RETURNVALUE_NOERROR);
 	if ((caster && target)
 	    && (caster == target || canCombat)
@@ -1631,6 +1715,7 @@ void Combat::doCombatHealth(const std::shared_ptr<Creature> &caster, const std::
 }
 
 void Combat::doCombatHealth(const std::shared_ptr<Creature> &caster, const Position &position, const std::unique_ptr<AreaCombat> &area, CombatDamage &damage, const CombatParams &params) {
+	SeStanceEffectScope seFxScope(caster, params.combatType, params.origin, true);
 	const auto origin = caster ? caster->getPosition() : Position();
 	CombatFunc(caster, origin, position, area, params, CombatHealthFunc, &damage);
 }
