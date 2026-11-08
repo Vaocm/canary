@@ -2520,6 +2520,10 @@ void PlayerTaskBoard::setWeeklyExpansion(bool value) {
 		}
 	}
 	save();
+	// refresh an open Task Board right away, so the new slots show up without closing and reopening it
+	if (value) {
+		sendWeeklyData();
+	}
 }
 
 // ---------------------------------------------------------------------------------------
