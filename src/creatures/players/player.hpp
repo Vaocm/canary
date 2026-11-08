@@ -232,6 +232,11 @@ public:
 	void setSerene(bool b, int32_t ticks = -1);
 
 	/**
+	 * @brief Applies or removes the Virtue of Justice Fist Fighting bonus to match the current Virtue and Serene state.
+	 */
+	void refreshVirtueOfJustice();
+
+	/**
 	 * @brief Empties the player's Harmony bar.
 	 */
 	void emptyHarmony();

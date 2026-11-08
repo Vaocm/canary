@@ -13013,8 +13013,27 @@ void Player::setVirtue(Virtue_t newVirtue) {
 
 	virtue = newVirtue;
 
+	refreshVirtueOfJustice();
+
 	sendSkills();
 	sendMonkData(MonkData_t::Virtue, enumToValue(virtue));
+}
+
+// Soul Eater: Virtue of Justice (+8% Fist Fighting, +16% while Serene) is applied here, so it follows the Serene state,
+// stays after a relogin and is removed when another Virtue is chosen.
+void Player::refreshVirtueOfJustice() {
+	const uint32_t justiceSubId = magic_enum::enum_integer(AttrSubId_t::VirtueOfJustice);
+	if (const auto &oldCondition = getCondition(CONDITION_ATTRIBUTES, CONDITIONID_COMBAT, justiceSubId)) {
+		removeCondition(oldCondition);
+	}
+
+	if (virtue != Virtue_t::Justice || getPlayerVocationEnum() != VOCATION_MONK_CIP) {
+		return;
+	}
+
+	const auto &condition = Condition::createCondition(CONDITIONID_COMBAT, CONDITION_ATTRIBUTES, -1, 0, true, justiceSubId, false);
+	condition->setParam(CONDITION_PARAM_SKILL_FISTPERCENT, hasCondition(CONDITION_SERENE) ? 116 : 108);
+	addCondition(condition);
 }
 
 void Player::setSerene(bool b, int32_t ticks /* = -1 */) {
@@ -13034,6 +13053,7 @@ void Player::setSerene(bool b, int32_t ticks /* = -1 */) {
 	}
 
 	if (virtue == Virtue_t::Justice) {
+		refreshVirtueOfJustice();
 		sendSkills();
 	}
 }
