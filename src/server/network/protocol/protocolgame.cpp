@@ -8729,8 +8729,10 @@ void ProtocolGame::AddPlayerSkills(NetworkMessage &msg) {
 	// Imbuements
 	msg.addDouble(player->getSkillLevel(SKILL_LIFE_LEECH_AMOUNT) / 10000.); // Life Leech
 	msg.addDouble(player->getSkillLevel(SKILL_MANA_LEECH_AMOUNT) / 10000.); // Mana Leech
-	msg.addDouble(player->getSkillLevel(SKILL_CRITICAL_HIT_CHANCE) / 10000.); // Crit Chance
-	msg.addDouble(player->getSkillLevel(SKILL_CRITICAL_HIT_DAMAGE) / 10000.); // Crit Extra Damage
+	// Soul Eater: Reaper's Edge adds +10% crit chance and +10% crit extra damage in combat (Combat::applyExtensions); show it in the window only
+	const uint32_t seReaperCrit = player->hasSeStance(SeStance::ReapersEdge) ? 1000 : 0;
+	msg.addDouble(std::min<uint32_t>(10000, player->getSkillLevel(SKILL_CRITICAL_HIT_CHANCE) + seReaperCrit) / 10000.); // Crit Chance
+	msg.addDouble((player->getSkillLevel(SKILL_CRITICAL_HIT_DAMAGE) + seReaperCrit) / 10000.); // Crit Extra Damage
 	msg.addDouble(getForgeSkillStat(CONST_SLOT_LEFT)); // Onslaught
 
 	msg.add<uint16_t>(player->getDefense(true));
