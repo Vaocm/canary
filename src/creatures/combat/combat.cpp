@@ -1507,6 +1507,12 @@ void Combat::CombatFunc(const std::shared_ptr<Creature> &caster, const Position 
 	applyExtensions(caster, affectedTargets, extensionsDamage, params);
 	if (affectedTargets.size() == 1) {
 		tmpDamage = extensionsDamage;
+	} else if (casterPlayer && params.origin == ORIGIN_SPELL && (casterPlayer->getSeStance(0) >= SeStance::MasterDecay && casterPlayer->getSeStance(0) <= SeStance::MasterThunder)) {
+		// Soul Eater: Sorcerer Master stances also apply to area spells that hit several creatures (element change and base damage bonus)
+		tmpDamage.primary.type = extensionsDamage.primary.type;
+		tmpDamage.primary.value = extensionsDamage.primary.value;
+		tmpDamage.secondary.type = extensionsDamage.secondary.type;
+		tmpDamage.secondary.value = extensionsDamage.secondary.value;
 	}
 	for (const auto &tile : tileList) {
 		if (canDoCombat(caster, tile, params.aggressive) != RETURNVALUE_NOERROR) {
