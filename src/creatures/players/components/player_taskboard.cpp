@@ -2217,20 +2217,26 @@ bool PlayerTaskBoard::isActiveBountyRace(uint16_t raceId) {
 	return offer.state == 1 && offer.raceId == raceId;
 }
 
+bool PlayerTaskBoard::hasBountyTalismanEquipped() const {
+	const auto ring = m_player.getInventoryItem(CONST_SLOT_RING);
+	return ring && ring->getID() == TaskBoard::BOUNTY_TALISMAN_ITEM_ID;
+}
+
+// Soul Eater: like real Tibia, the talisman bonuses only apply while the Bounty Talisman is worn in the ring slot.
 double PlayerTaskBoard::getDamagePercent(uint16_t raceId) {
-	return isActiveBountyRace(raceId) ? TaskBoard::getTalismanBonusHundredths(m_state.talisman[0], 0) / 100.0 : 0.0;
+	return hasBountyTalismanEquipped() && isActiveBountyRace(raceId) ? TaskBoard::getTalismanBonusHundredths(m_state.talisman[0], 0) / 100.0 : 0.0;
 }
 
 double PlayerTaskBoard::getLifeLeechPercent(uint16_t raceId) {
-	return isActiveBountyRace(raceId) ? TaskBoard::getTalismanBonusHundredths(m_state.talisman[1], 1) / 100.0 : 0.0;
+	return hasBountyTalismanEquipped() && isActiveBountyRace(raceId) ? TaskBoard::getTalismanBonusHundredths(m_state.talisman[1], 1) / 100.0 : 0.0;
 }
 
 double PlayerTaskBoard::getLootPercent(uint16_t raceId) {
-	return isActiveBountyRace(raceId) ? TaskBoard::getTalismanBonusHundredths(m_state.talisman[2], 2) / 100.0 : 0.0;
+	return hasBountyTalismanEquipped() && isActiveBountyRace(raceId) ? TaskBoard::getTalismanBonusHundredths(m_state.talisman[2], 2) / 100.0 : 0.0;
 }
 
 double PlayerTaskBoard::getDoubleBestiaryPercent(uint16_t raceId) {
-	return isActiveBountyRace(raceId) ? TaskBoard::getTalismanBonusHundredths(m_state.talisman[3], 3) / 100.0 : 0.0;
+	return hasBountyTalismanEquipped() && isActiveBountyRace(raceId) ? TaskBoard::getTalismanBonusHundredths(m_state.talisman[3], 3) / 100.0 : 0.0;
 }
 
 // ---------------------------------------------------------------------------------------

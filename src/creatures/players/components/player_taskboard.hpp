@@ -19,6 +19,8 @@ namespace TaskBoard {
 	constexpr uint8_t REROLL_TOKEN_CAP = 10;
 	constexpr uint32_t PREFERRED_ASSIGN_COST = 10;
 	constexpr uint8_t PROMOTION_POINTS_MAX = 50;
+	// Soul Eater: the Bounty Talisman item (ring slot); its bonuses only work while it is worn
+	constexpr uint16_t BOUNTY_TALISMAN_ITEM_ID = 31263;
 
 	// Bounty kill amount range per difficulty (Tibia wiki)
 	constexpr std::array<std::pair<uint16_t, uint16_t>, DIFFICULTY_COUNT> BOUNTY_KILL_RANGE = { { { 50, 100 }, { 100, 200 }, { 200, 400 }, { 300, 600 } } };
@@ -138,6 +140,7 @@ public:
 	double getLootPercent(uint16_t raceId);
 	double getDoubleBestiaryPercent(uint16_t raceId);
 	bool isActiveBountyRace(uint16_t raceId);
+	bool hasBountyTalismanEquipped() const;
 
 	// Accessors / admin
 	uint32_t getBountyPoints();
