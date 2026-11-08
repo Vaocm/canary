@@ -2022,14 +2022,10 @@ uint32_t PlayerTaskBoard::getTalismanCost(uint8_t path) const {
 
 void PlayerTaskBoard::changeDifficulty(uint8_t difficulty) {
 	difficulty = std::min<uint8_t>(difficulty, TaskBoard::DIFFICULTY_COUNT - 1);
-	if (m_state.activeIndex >= 0) {
-		m_player.sendCancelMessage("Finish your current bounty task before changing the difficulty.");
-		sendBountyData();
-		return;
-	}
+	// Like real Tibia ("You can change the difficulty at any time, but it only takes effect when selecting your next task"):
+	// switching only stores the difficulty. The offers on screen stay, so switching cannot be used as a free reroll.
 	if (difficulty != m_state.difficulty) {
 		m_state.difficulty = difficulty;
-		generateOffers();
 		save();
 	}
 	sendBountyData();
