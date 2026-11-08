@@ -2557,6 +2557,12 @@ void Combat::applyExtensions(const std::shared_ptr<Creature> &caster, const std:
 			player->seStanceSpellAdjust(damage, baseChance, baseBonus);
 		}
 
+		// Soul Eater: Assassin Reaper's Edge stance, +10% critical hit chance and +10% critical extra damage
+		if (player->hasSeStance(SeStance::ReapersEdge)) {
+			baseChance = static_cast<uint16_t>(std::min<int32_t>(10000, baseChance + 1000));
+			baseBonus += 1000;
+		}
+
 		uint16_t lowBlowRaceid = player->parseRacebyCharm(CHARM_LOW);
 		uint16_t savageBlowRaceid = player->parseRacebyCharm(CHARM_SAVAGE);
 

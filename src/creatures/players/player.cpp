@@ -7314,6 +7314,8 @@ uint16_t Player::getSkillLevel(skills_t skill) const {
 		skillLevel = skillLevel * 130 / 100;
 	} else if (seStance[0] == SeStance::Sharpshooter && skill == SKILL_DISTANCE) {
 		skillLevel = skillLevel * 132 / 100;
+	} else if (seStance[0] == SeStance::ReapersEdge && (skill == SKILL_SWORD || skill == SKILL_CLUB || skill == SKILL_AXE || skill == SKILL_DISTANCE || skill == SKILL_FIST)) {
+		skillLevel = skillLevel * 90 / 100; // Reaper's Edge: 10% less skill
 	}
 
 	const int32_t avatarCritChance = m_wheelPlayer.checkAvatarSkill(WheelAvatarSkill_t::CRITICAL_CHANCE);

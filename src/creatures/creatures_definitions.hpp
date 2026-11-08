@@ -62,6 +62,8 @@ namespace SeStance {
 	constexpr uint8_t MasterThunder = 9; // Sorcerer (elemental slot)
 	constexpr uint8_t ElementalSynthesis = 10; // Druid
 	constexpr uint8_t SharedConservation = 11; // Druid
+	constexpr uint8_t ReapersEdge = 12; // Assassin
+	constexpr uint8_t VenomCoating = 13; // Assassin
 }
 
 enum class Virtue_t : uint8_t {

@@ -92,6 +92,36 @@ namespace {
 }
 
 namespace InternalGame {
+	// Soul Eater: Assassin Venom Coating poison tick (earth damage, once per second, 3 ticks)
+	void seVenomTick(uint32_t targetId) {
+		const auto &target = g_game().getCreatureByID(targetId);
+		if (!target) {
+			return;
+		}
+		if (target->isRemoved() || target->getHealth() <= 0 || target->seVenomTicks <= 0) {
+			target->seVenomTicks = 0;
+			target->seVenomPerTick = 0;
+			return;
+		}
+
+		--target->seVenomTicks;
+		const auto &attacker = g_game().getPlayerByID(target->seVenomAttackerId);
+		CombatDamage venom;
+		venom.primary.type = COMBAT_EARTHDAMAGE;
+		venom.primary.value = -target->seVenomPerTick;
+		venom.origin = ORIGIN_CONDITION;
+		g_game().combatChangeHealth(attacker, target, venom);
+
+		if (target->seVenomTicks > 0 && !target->isRemoved() && target->getHealth() > 0) {
+			g_dispatcher().scheduleEvent(
+				1000, [targetId] { seVenomTick(targetId); }, "Game::seVenomTick"
+			);
+		} else {
+			target->seVenomTicks = 0;
+			target->seVenomPerTick = 0;
+		}
+	}
+
 	constexpr uint64_t TELEPORT_SPAM_WINDOW_MS = 1000;
 	constexpr uint16_t TELEPORT_SPAM_LIMIT = 10;
 	constexpr uint64_t TELEPORT_SPAM_BLOCK_MS = 1000;
@@ -8340,6 +8370,22 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 				};
 				pierce(damage.primary);
 				pierce(damage.secondary);
+			}
+
+			// Assassin Venom Coating: spells and auto attacks poison monsters for 3% of the damage dealt, over 3 seconds
+			if (attackerPlayer && targetMonster && attackerPlayer->hasSeStance(SeStance::VenomCoating) && (damage.origin == ORIGIN_SPELL || damage.origin == ORIGIN_MELEE || damage.origin == ORIGIN_RANGED || damage.origin == ORIGIN_FIST)) {
+				const int32_t seHit = std::abs(damage.primary.value + damage.secondary.value);
+				const int32_t sePerTick = std::max<int32_t>(1, seHit / 100);
+				const bool seRunning = target->seVenomTicks > 0;
+				target->seVenomPerTick = seRunning ? std::max(target->seVenomPerTick, sePerTick) : sePerTick;
+				target->seVenomTicks = 3;
+				target->seVenomAttackerId = attackerPlayer->getID();
+				if (!seRunning) {
+					const uint32_t seTargetId = target->getID();
+					g_dispatcher().scheduleEvent(
+						1000, [seTargetId] { InternalGame::seVenomTick(seTargetId); }, "Game::seVenomTick"
+					);
+				}
 			}
 
 			// Aura of Sapped Strength / Exposed Weakness: spells, runes and auto attacks mark the target for 10 seconds

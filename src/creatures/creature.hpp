@@ -480,6 +480,10 @@ public:
 	// Soul Eater: Sorcerer crippling stances (end time in ms)
 	int64_t seSapUntil = 0;
 	int64_t seExposeUntil = 0;
+	// Assassin Venom Coating stance: poison ticks still to be dealt
+	int32_t seVenomPerTick = 0;
+	int32_t seVenomTicks = 0;
+	uint32_t seVenomAttackerId = 0;
 
 	virtual float getAttackFactor() const {
 		return 1.0f;

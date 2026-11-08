@@ -142,6 +142,7 @@ public:
 	[[nodiscard]] bool isLearnable() const;
 
 	uint32_t getManaCost(const std::shared_ptr<Player> &player) const;
+	uint32_t getManaCostBase(const std::shared_ptr<Player> &player) const;
 	[[nodiscard]] uint32_t getSoulCost() const;
 	void setSoulCost(uint32_t s);
 	[[nodiscard]] uint32_t getLevel() const;
