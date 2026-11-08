@@ -12964,12 +12964,20 @@ void Player::seStanceSpellAdjust(CombatDamage &damage, uint16_t &critChance, int
 			return;
 	}
 
+	// first damage of a new spell cast: the conversion armed by an earlier cast is used up by this cast
+	if (seSeenCastId != seCastId) {
+		seSeenCastId = seCastId;
+		seConvertThisCast = seElementArmed;
+		seElementArmed = false;
+	}
+
 	const auto isConvertible = [](CombatType_t type) {
 		return type == COMBAT_PHYSICALDAMAGE || type == COMBAT_EARTHDAMAGE || type == COMBAT_FIREDAMAGE || type == COMBAT_ENERGYDAMAGE || type == COMBAT_ICEDAMAGE || type == COMBAT_HOLYDAMAGE || type == COMBAT_DEATHDAMAGE;
 	};
 
 	if (damage.primary.type == element) {
-		// natural damage of the stance element gets the stance bonus
+		// natural damage of the stance element: gets the stance bonus and arms the conversion of the next non-element spell
+		seElementArmed = true;
 		switch (seStance[0]) {
 			case SeStance::MasterFlames:
 				damage.primary.value = static_cast<int32_t>(std::lround(damage.primary.value * 1.04));
@@ -12986,8 +12994,8 @@ void Player::seStanceSpellAdjust(CombatDamage &damage, uint16_t &critChance, int
 			default:
 				break;
 		}
-	} else if (isConvertible(damage.primary.type)) {
-		// Soul Eater: while a Master stance is active, every damage spell becomes the stance element
+	} else if (seConvertThisCast && isConvertible(damage.primary.type)) {
+		// Soul Eater (wiki): whenever a spell of the stance element is cast, the next non-element spell becomes that element
 		damage.primary.type = element;
 		if (isConvertible(damage.secondary.type)) {
 			damage.secondary.type = element;

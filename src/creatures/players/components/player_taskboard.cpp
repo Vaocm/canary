@@ -2218,8 +2218,9 @@ bool PlayerTaskBoard::isActiveBountyRace(uint16_t raceId) {
 }
 
 bool PlayerTaskBoard::hasBountyTalismanEquipped() const {
-	const auto ring = m_player.getInventoryItem(CONST_SLOT_RING);
-	return ring && ring->getID() == TaskBoard::BOUNTY_TALISMAN_ITEM_ID;
+	// the Bounty Talisman sits in the slot below the shield (the ammunition slot)
+	const auto talisman = m_player.getInventoryItem(CONST_SLOT_AMMO);
+	return talisman && talisman->getID() == TaskBoard::BOUNTY_TALISMAN_ITEM_ID;
 }
 
 // Soul Eater: like real Tibia, the talisman bonuses only apply while the Bounty Talisman is worn in the ring slot.

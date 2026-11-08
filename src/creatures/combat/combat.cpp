@@ -30,7 +30,7 @@
 #include "creatures/players/player.hpp"
 #include "creatures/players/components/wheel/wheel_definitions.hpp"
 
-// Soul Eater: while a Sorcerer "Master" stance is active, every damage spell is converted to the stance element.
+// Soul Eater: a Sorcerer "Master" stance converts the next non-element spell to the stance element after a spell of that element was cast.
 // The damage type is converted in Player::seStanceSpellAdjust; this makes the spell LOOK like that element as well
 // (impact effect and projectile are swapped for the stance element's).
 namespace {
@@ -64,7 +64,7 @@ namespace {
 					return;
 			}
 			const bool convertible = spellType == COMBAT_PHYSICALDAMAGE || spellType == COMBAT_EARTHDAMAGE || spellType == COMBAT_FIREDAMAGE || spellType == COMBAT_ENERGYDAMAGE || spellType == COMBAT_ICEDAMAGE || spellType == COMBAT_HOLYDAMAGE || spellType == COMBAT_DEATHDAMAGE;
-			if (!convertible || spellType == element) {
+			if (!convertible || spellType == element || !player->seCastConverts()) {
 				return;
 			}
 			seFxElement = element;

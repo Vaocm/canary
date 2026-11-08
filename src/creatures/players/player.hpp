@@ -215,6 +215,10 @@ public:
 	void seNewSpellCast() {
 		++seCastId;
 	}
+	// true when the spell being cast right now is converted to the Master stance element (decided on its first damage)
+	bool seCastConverts() const {
+		return seSeenCastId != seCastId ? seElementArmed : seConvertThisCast;
+	}
 	// called for every damaging spell before critical hits are rolled (Sorcerer elemental stances)
 	void seStanceSpellAdjust(CombatDamage &damage, uint16_t &critChance, int32_t &critBonus);
 
