@@ -209,6 +209,13 @@ public:
 		return slot < 2 ? seStance[slot] : 0;
 	}
 	void setSeStance(uint8_t slot, uint8_t id);
+	// Soul Eater: Assassin's Focus (utito nex focus) is a marker condition with this sub id; its +15% critical chance
+	// and +15% critical extra damage are applied in Combat::applyExtensions and shown in the skills window.
+	static constexpr uint32_t SE_FOCUS_SUBID = 93940;
+	bool hasAssassinFocus() const {
+		return hasCondition(CONDITION_ATTRIBUTES, SE_FOCUS_SUBID);
+	}
+
 	bool hasSeStance(uint8_t id) const {
 		return seStance[0] == id || seStance[1] == id;
 	}

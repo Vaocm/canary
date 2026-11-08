@@ -2563,6 +2563,12 @@ void Combat::applyExtensions(const std::shared_ptr<Creature> &caster, const std:
 			baseBonus += 1000;
 		}
 
+		// Soul Eater: Assassin's Focus, +15% critical hit chance and +15% critical extra damage
+		if (player->hasAssassinFocus()) {
+			baseChance = static_cast<uint16_t>(std::min<int32_t>(10000, baseChance + 1500));
+			baseBonus += 1500;
+		}
+
 		uint16_t lowBlowRaceid = player->parseRacebyCharm(CHARM_LOW);
 		uint16_t savageBlowRaceid = player->parseRacebyCharm(CHARM_SAVAGE);
 
