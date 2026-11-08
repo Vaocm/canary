@@ -573,34 +573,10 @@ void IOPrey::initializeTaskHuntOptions() {
 		kills *= 4;
 	}
 
+	// Soul Eater: with the Task Board protocol this packet only lists the races whose Soulpit animus mastery is done
+	// (u16 count + u16 race ids). No animus mastery exists on this server, so the list is empty.
 	msg.addByte(0xBA);
-	const std::map<uint16_t, std::string> &bestiaryList = g_game().getBestiaryList();
-	msg.add<uint16_t>(static_cast<uint16_t>(bestiaryList.size()));
-	std::for_each(bestiaryList.begin(), bestiaryList.end(), [&msg](auto mType) {
-		const auto mtype = g_monsters().getMonsterType(mType.second);
-		if (!mtype) {
-			return;
-		}
-
-		msg.add<uint16_t>(mtype->info.raceid);
-		if (mtype->info.bestiaryStars <= 1) {
-			msg.addByte(0x01);
-		} else if (mtype->info.bestiaryStars <= 3) {
-			msg.addByte(0x02);
-		} else {
-			msg.addByte(0x03);
-		}
-	});
-
-	msg.addByte(static_cast<uint8_t>(taskOption.size()));
-	std::for_each(taskOption.begin(), taskOption.end(), [&msg](const std::unique_ptr<TaskHuntingOption> &option) {
-		msg.addByte(static_cast<uint8_t>(option->difficult));
-		msg.addByte(option->rarity);
-		msg.add<uint16_t>(option->firstKills);
-		msg.add<uint16_t>(option->firstReward);
-		msg.add<uint16_t>(option->secondKills);
-		msg.add<uint16_t>(option->secondReward);
-	});
+	msg.add<uint16_t>(0);
 	m_baseDataMessage = msg;
 }
 
