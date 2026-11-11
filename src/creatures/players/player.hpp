@@ -215,6 +215,13 @@ public:
 	void seNewSpellCast() {
 		++seCastId;
 	}
+	// runes are not affected by the Sorcerer Master stances (spells only)
+	void setSeRuneCasting(bool value) {
+		seRuneCasting = value;
+	}
+	bool isSeRuneCasting() const {
+		return seRuneCasting;
+	}
 	// true when the spell being cast right now is converted to the Master stance element (decided on its first damage)
 	bool seCastConverts() const {
 		return seSeenCastId != seCastId ? seElementArmed : seConvertThisCast;
@@ -1707,6 +1714,7 @@ private:
 	Virtue_t virtue = Virtue_t::None;
 	uint8_t seStance[2] = { 0, 0 };
 	uint32_t seCastId = 0;
+	bool seRuneCasting = false;
 	uint32_t seSeenCastId = 0;
 	bool seElementArmed = false; // a natural spell of the stance element was cast: the next non-element spell is converted
 	bool seConvertThisCast = false;

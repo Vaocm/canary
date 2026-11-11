@@ -12958,6 +12958,9 @@ void Player::setSeStance(uint8_t slot, uint8_t id) {
 }
 
 void Player::seStanceSpellAdjust(CombatDamage &damage, uint16_t &critChance, int32_t &critBonus) {
+	if (seRuneCasting) {
+		return;
+	}
 	CombatType_t element;
 	switch (seStance[0]) {
 		case SeStance::MasterDecay:

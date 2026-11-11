@@ -46,7 +46,7 @@ namespace {
 				return;
 			}
 			const auto &player = caster->getPlayer();
-			if (!player) {
+			if (!player || player->isSeRuneCasting()) {
 				return;
 			}
 			CombatType_t element;

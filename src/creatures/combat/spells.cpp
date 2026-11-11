@@ -1584,7 +1584,16 @@ bool RuneSpell::executeCastSpell(const std::shared_ptr<Creature> &creature, cons
 
 	LuaScriptInterface::pushBoolean(L, isHotkey);
 
-	return getRuneSpellScriptInterface()->callFunction(3);
+	// Soul Eater: Sorcerer Master stances never apply to runes
+	const auto &runePlayer = creature ? creature->getPlayer() : nullptr;
+	if (runePlayer) {
+		runePlayer->setSeRuneCasting(true);
+	}
+	const bool runeResult = getRuneSpellScriptInterface()->callFunction(3);
+	if (runePlayer) {
+		runePlayer->setSeRuneCasting(false);
+	}
+	return runeResult;
 }
 
 bool RuneSpell::isInstant() const {
