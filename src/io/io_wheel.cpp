@@ -355,14 +355,14 @@ void IOWheel::initializeMonkSpells() {
 }
 
 // Soul Eater: the Assassin shares the Paladin wheel layout, but its five augmented-spell slices unlock Assassin spells.
-// Blood Rush: -30 mana / -6s cooldown. Phantom Slash: -3s cooldown / +12% damage. Chain Shuriken: -1s cooldown / +12% damage.
-// Shadow Clones: -4s cooldown / -40 mana. Kunai Fan: -30 mana / +10% damage.
+// Blood Rush: -30 mana / -6s cooldown. Knife Bloom: -3s cooldown / +12% damage. Chain Shuriken: -1s cooldown / +12% damage.
+// Caltrops: -5s cooldown / -40 mana. Kunai Fan: -30 mana / +10% damage.
 void IOWheel::initializeAssassinSpells() {
 	m_wheelBonusData.spells.assassin[0].name = "Blood Rush";
 	m_wheelBonusData.spells.assassin[0].grade[1].decrease.manaCost = 30;
 	m_wheelBonusData.spells.assassin[0].grade[2].decrease.cooldown = 6;
 
-	m_wheelBonusData.spells.assassin[1].name = "Phantom Slash";
+	m_wheelBonusData.spells.assassin[1].name = "Knife Bloom";
 	m_wheelBonusData.spells.assassin[1].grade[1].decrease.cooldown = 3;
 	m_wheelBonusData.spells.assassin[1].grade[2].increase.damage = 12;
 
@@ -370,8 +370,8 @@ void IOWheel::initializeAssassinSpells() {
 	m_wheelBonusData.spells.assassin[2].grade[1].decrease.cooldown = 1;
 	m_wheelBonusData.spells.assassin[2].grade[2].increase.damage = 12;
 
-	m_wheelBonusData.spells.assassin[3].name = "Shadow Clones";
-	m_wheelBonusData.spells.assassin[3].grade[1].decrease.cooldown = 4;
+	m_wheelBonusData.spells.assassin[3].name = "Caltrops";
+	m_wheelBonusData.spells.assassin[3].grade[1].decrease.cooldown = 5;
 	m_wheelBonusData.spells.assassin[3].grade[2].decrease.manaCost = 40;
 
 	m_wheelBonusData.spells.assassin[4].name = "Kunai Fan";
@@ -409,9 +409,9 @@ void IOWheel::addSpell(const std::shared_ptr<Player> &player, PlayerWheelMethods
 		if (const auto &vocation = player->getVocation(); vocation && (vocation->getId() == 11 || vocation->getId() == 12)) {
 			static const std::unordered_map<std::string, std::string> assassinSpells = {
 				{ "Sharpshooter", "Blood Rush" },
-				{ "Strong Ethereal Spear", "Phantom Slash" },
+				{ "Strong Ethereal Spear", "Knife Bloom" },
 				{ "Divine Dazzle", "Chain Shuriken" },
-				{ "Swift Foot", "Shadow Clones" },
+				{ "Swift Foot", "Caltrops" },
 				{ "Divine Caldera", "Kunai Fan" },
 			};
 			if (const auto it = assassinSpells.find(spellName); it != assassinSpells.end()) {
