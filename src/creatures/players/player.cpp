@@ -1360,6 +1360,11 @@ bool Player::canWalkthrough(const std::shared_ptr<Creature> &creature) {
 	}
 
 	if (player) {
+		// Soul Eater: a player standing at a depot (next to a locker) can never be walked through,
+		// so nobody can stack on him and reach his locker / items.
+		if (player->isNearDepotBox()) {
+			return false;
+		}
 		// Soul Eater: like real Tibia, two players who both have PvP off (secure mode) can walk through each other
 		if (hasSecureMode() && player->hasSecureMode() && getZoneType() != ZONE_PVP && player->getZoneType() != ZONE_PVP) {
 			return true;
@@ -1412,6 +1417,10 @@ bool Player::canWalkthroughEx(const std::shared_ptr<Creature> &creature) const {
 	const auto &player = creature->getPlayer();
 	const auto &npc = creature->getNpc();
 	if (player) {
+		// Soul Eater: a player standing at a depot can never be walked through
+		if (player->isNearDepotBox()) {
+			return false;
+		}
 		// Soul Eater: both players have PvP off (secure mode)
 		if (hasSecureMode() && player->hasSecureMode() && player->getZoneType() != ZONE_PVP) {
 			return true;
