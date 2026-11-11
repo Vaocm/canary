@@ -14,6 +14,7 @@
 #include "creatures/players/player.hpp"
 #include "creatures/players/components/wheel/wheel_definitions.hpp"
 #include "creatures/combat/spells.hpp"
+#include "creatures/players/vocations/vocation.hpp"
 #include "utils/tools.hpp"
 
 #define MITIGATION_INCREASE 0.075
