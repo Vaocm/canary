@@ -233,8 +233,7 @@ void IOWheel::initializeMapData() {
 
 void IOWheel::initializeDruidSpells() {
 	m_wheelBonusData.spells.druid[0].name = "Strong Ice Wave";
-	m_wheelBonusData.spells.druid[0].grade[1].leech.mana = 3;
-	m_wheelBonusData.spells.druid[0].grade[2].increase.damage = 10;
+	m_wheelBonusData.spells.druid[0].grade[1].increase.damage = 6; // grade II (Expanded Shape) has no server effect yet
 
 	m_wheelBonusData.spells.druid[1].name = "Mass Healing";
 	m_wheelBonusData.spells.druid[1].grade[1].increase.heal = 4;
@@ -246,21 +245,20 @@ void IOWheel::initializeDruidSpells() {
 
 	m_wheelBonusData.spells.druid[3].name = "Terra Wave";
 	m_wheelBonusData.spells.druid[3].grade[1].increase.damage = static_cast<int>(std::round(6.5));
-	m_wheelBonusData.spells.druid[3].grade[2].leech.life = 5;
+	m_wheelBonusData.spells.druid[3].grade[2].leech.life = 10;
 
 	m_wheelBonusData.spells.druid[4].name = "Heal Friend";
-	m_wheelBonusData.spells.druid[4].grade[1].decrease.manaCost = 10;
-	m_wheelBonusData.spells.druid[4].grade[2].increase.heal = static_cast<int>(std::round(5.5));
+	m_wheelBonusData.spells.druid[4].grade[1].increase.heal = 4;
+	m_wheelBonusData.spells.druid[4].grade[2].increase.heal = 6;
 }
 
 void IOWheel::initializeKnightSpells() {
 	m_wheelBonusData.spells.knight[0].name = "Front Sweep";
-	m_wheelBonusData.spells.knight[0].grade[1].leech.life = 5;
-	m_wheelBonusData.spells.knight[0].grade[2].increase.damage = 14;
+	m_wheelBonusData.spells.knight[0].grade[1].increase.damage = 40; // grade II (Expanded Shape) has no server effect yet
 
 	m_wheelBonusData.spells.knight[1].name = "Groundshaker";
-	m_wheelBonusData.spells.knight[1].grade[1].increase.damage = static_cast<int>(std::round(12.5));
-	m_wheelBonusData.spells.knight[1].grade[2].decrease.cooldown = 2;
+	m_wheelBonusData.spells.knight[1].grade[1].decrease.cooldown = 2;
+	m_wheelBonusData.spells.knight[1].grade[2].increase.damage = static_cast<int>(std::round(12.5));
 
 	m_wheelBonusData.spells.knight[2].name = "Chivalrous Challenge";
 	m_wheelBonusData.spells.knight[2].grade[1].decrease.manaCost = 20;
@@ -268,7 +266,7 @@ void IOWheel::initializeKnightSpells() {
 
 	m_wheelBonusData.spells.knight[3].name = "Intense Wound Cleansing";
 	m_wheelBonusData.spells.knight[3].grade[1].increase.heal = 125;
-	m_wheelBonusData.spells.knight[3].grade[2].decrease.cooldown = 300;
+	m_wheelBonusData.spells.knight[3].grade[2].decrease.cooldown = 60;
 
 	m_wheelBonusData.spells.knight[4].name = "Fierce Berserk";
 	m_wheelBonusData.spells.knight[4].grade[1].decrease.manaCost = 30;
@@ -285,9 +283,9 @@ void IOWheel::initializePaladinSpells() {
 	m_wheelBonusData.spells.paladin[1].grade[2].increase.damage = 380;
 
 	m_wheelBonusData.spells.paladin[2].name = "Divine Dazzle";
-	m_wheelBonusData.spells.paladin[2].grade[1].increase.additionalTarget = 1;
+	m_wheelBonusData.spells.paladin[2].grade[1].increase.additionalTarget = 2;
 	m_wheelBonusData.spells.paladin[2].grade[2].increase.duration = 4;
-	m_wheelBonusData.spells.paladin[2].grade[2].decrease.cooldown = 4;
+	m_wheelBonusData.spells.paladin[2].grade[2].decrease.cooldown = 8;
 
 	m_wheelBonusData.spells.paladin[3].name = "Swift Foot";
 	m_wheelBonusData.spells.paladin[3].grade[1].decrease.secondaryGroupCooldown = 8;
@@ -295,7 +293,7 @@ void IOWheel::initializePaladinSpells() {
 
 	m_wheelBonusData.spells.paladin[4].name = "Divine Caldera";
 	m_wheelBonusData.spells.paladin[4].grade[1].decrease.manaCost = 20;
-	m_wheelBonusData.spells.paladin[4].grade[2].increase.damage = static_cast<int>(std::round(8.5));
+	m_wheelBonusData.spells.paladin[4].grade[2].increase.damage = 10;
 }
 
 void IOWheel::initializeSorcererSpells() {
@@ -307,12 +305,11 @@ void IOWheel::initializeSorcererSpells() {
 	m_wheelBonusData.spells.sorcerer[1].grade[2].increase.damageReduction = 1;
 
 	m_wheelBonusData.spells.sorcerer[2].name = "Energy Wave";
-	m_wheelBonusData.spells.sorcerer[2].grade[1].increase.damage = 5;
-	m_wheelBonusData.spells.sorcerer[2].grade[2].increase.area = true;
+	m_wheelBonusData.spells.sorcerer[2].grade[1].increase.area = true;
+	m_wheelBonusData.spells.sorcerer[2].grade[2].increase.damage = 10;
 
 	m_wheelBonusData.spells.sorcerer[3].name = "Great Fire Wave";
 	m_wheelBonusData.spells.sorcerer[3].grade[1].increase.criticalDamage = 15;
-	m_wheelBonusData.spells.sorcerer[3].grade[1].increase.criticalChance = 10;
 	m_wheelBonusData.spells.sorcerer[3].grade[2].increase.damage = 5;
 
 	m_wheelBonusData.spells.sorcerer[4].name = "Any_Focus_Mage_Spell";
@@ -322,25 +319,24 @@ void IOWheel::initializeSorcererSpells() {
 }
 
 void IOWheel::initializeMonkSpells() {
-	// Mass Spirit Mend: Grade 1 increases healing; Grade 2 adds area effect
+	// Mass Spirit Mend: Grade 1 increases healing; Grade 2 reduces cooldown
 	m_wheelBonusData.spells.monk[0].name = "Mass Spirit Mend";
 	m_wheelBonusData.spells.monk[0].grade[1].increase.heal = 8;
-	m_wheelBonusData.spells.monk[0].grade[2].increase.area = true;
+	m_wheelBonusData.spells.monk[0].grade[2].decrease.cooldown = 4;
 
 	// Mystic Repulse: Grade 1 reduces cooldown; Grade 2 increases damage
 	m_wheelBonusData.spells.monk[1].name = "Mystic Repulse";
-	m_wheelBonusData.spells.monk[1].grade[1].decrease.cooldown = 4;
-	m_wheelBonusData.spells.monk[1].grade[2].increase.damage = 40;
+	m_wheelBonusData.spells.monk[1].grade[1].decrease.cooldown = 6;
+	m_wheelBonusData.spells.monk[1].grade[2].increase.damage = 60;
 
-	// Chained Penance: Grade 1 adds 1 extra target; Grade 2 adds 2 extra targets
+	// Chained Penance: Grade 1 adds 1 extra target; Grade 2 increases damage
 	m_wheelBonusData.spells.monk[2].name = "Chained Penance";
 	m_wheelBonusData.spells.monk[2].grade[1].increase.additionalTarget = 1;
-	m_wheelBonusData.spells.monk[2].grade[2].increase.additionalTarget = 2;
+	m_wheelBonusData.spells.monk[2].grade[2].increase.damage = 18;
 
-	// Flurry of Blows: Grade 1 grants life leech; Grade 2 increases damage
+	// Flurry of Blows: Grade 1 (range +1) not implemented; Grade 2 increases damage
 	m_wheelBonusData.spells.monk[3].name = "Flurry of Blows";
-	m_wheelBonusData.spells.monk[3].grade[1].leech.life = 5;
-	m_wheelBonusData.spells.monk[3].grade[2].increase.damage = 12;
+	m_wheelBonusData.spells.monk[3].grade[2].increase.damage = 15; // grade I (range +1) has no server effect yet
 
 	// Sweeping Takedown: Grade 1 grants mana leech; Grade 2 increases critical stats
 	m_wheelBonusData.spells.monk[4].name = "Sweeping Takedown";
