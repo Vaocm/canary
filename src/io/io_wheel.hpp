@@ -69,6 +69,12 @@ public:
 				std::string name;
 			};
 
+			// Soul Eater: the Assassin has its own five augmented spells
+			struct Assassin {
+				std::array<WheelSpells::Bonus, 3> grade;
+				std::string name;
+			};
+
 			struct Monk {
 				std::array<WheelSpells::Bonus, 3> grade;
 				std::string name;
@@ -79,6 +85,7 @@ public:
 			std::array<Paladin, 5> paladin;
 			std::array<Sorcerer, 5> sorcerer;
 			std::array<Monk, 5> monk;
+			std::array<Assassin, 5> assassin;
 		};
 
 		Spells spells;
@@ -223,6 +230,11 @@ private:
 	 * @note Make sure to call this function before using paladin spells.
 	 */
 	void initializePaladinSpells();
+
+	/**
+	 * @brief Soul Eater: sets up the five augmented spells of the Assassin wheel.
+	 */
+	void initializeAssassinSpells();
 
 	/**
 	 * @brief Initializes the spells for the sorcerer vocation.

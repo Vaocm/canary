@@ -1515,7 +1515,9 @@ void PlayerWheel::sendOpenWheelWindow(NetworkMessage &msg, uint32_t ownerId) {
 
 	addInitialGems();
 	msg.addByte(getOptions(ownerId)); // Options
-	msg.addByte(m_player.getPlayerVocationEnum()); // Vocation id
+	// Soul Eater: the Assassin (11) / Shadow Ninja (12) send 6 so the client shows Assassin spell texts (layout stays Paladin)
+	const auto wheelVocationId = m_player.getVocation()->getId();
+	msg.addByte((wheelVocationId == 11 || wheelVocationId == 12) ? 6 : m_player.getPlayerVocationEnum()); // Vocation id
 
 	msg.add<uint16_t>(getWheelPoints(false)); // Points (false param for not send extra points)
 	msg.add<uint16_t>(getExtraPoints()); // Extra points
@@ -2584,7 +2586,11 @@ std::unordered_map<std::pair<uint16_t, uint8_t>, double, PairHash, PairEqual> Pl
 
 	auto registerAugment = [&](const uint16_t currentSpellId, const std::string &spellName, uint8_t grade) {
 		const auto vocationBaseId = m_player.getVocation()->getBaseId();
-		if (vocationBaseId == Vocation_t::VOCATION_SORCERER) {
+		const auto vocationId = m_player.getVocation()->getId();
+		if (vocationId == 11 || vocationId == 12) {
+			// Soul Eater: Assassin / Shadow Ninja have their own augmented spells
+			getAugmentsByVocation(currentSpellId, spellName, grade, ioBonusData.spells.assassin, wheelAugments);
+		} else if (vocationBaseId == Vocation_t::VOCATION_SORCERER) {
 			getAugmentsByVocation(currentSpellId, spellName, grade, ioBonusData.spells.sorcerer, wheelAugments);
 		} else if (vocationBaseId == Vocation_t::VOCATION_DRUID) {
 			getAugmentsByVocation(currentSpellId, spellName, grade, ioBonusData.spells.druid, wheelAugments);
