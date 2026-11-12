@@ -7519,6 +7519,14 @@ void ProtocolGame::sendAddCreature(const std::shared_ptr<Creature> &creature, co
 	sendTibiaTime(g_game().getLightHour());
 	sendPendingStateEntered();
 	sendEnterWorld();
+	if (mapViewX != MAP_MAX_CLIENT_VIEW_PORT_X || mapViewY != MAP_MAX_CLIENT_VIEW_PORT_Y) {
+		// Soul Eater: tell the client (otclient-only packet 0x33) the area it is about to receive, before the first map.
+		NetworkMessage rangeMsg;
+		rangeMsg.addByte(0x33);
+		rangeMsg.addByte(static_cast<uint8_t>((mapViewX + 1) * 2));
+		rangeMsg.addByte(static_cast<uint8_t>((mapViewY + 1) * 2));
+		writeToOutputBuffer(rangeMsg);
+	}
 	sendMapDescription(pos);
 	loggedIn = true;
 
