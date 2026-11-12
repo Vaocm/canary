@@ -592,6 +592,11 @@ private:
 	bool loggedIn = false;
 
 	bool oldProtocol = false;
+	// Soul Eater: how much map (in tiles around the player) is sent to this client. 8/6 is the standard 18x14 area;
+	// the new Soul Eater client announces "sewide1" in its login packet and gets 10/8 (22x18), a wider margin so a fast
+	// character never walks into an area the server has not sent yet. Only the sent area grows, never the visible one.
+	int32_t mapViewX = 8;
+	int32_t mapViewY = 6;
 	bool isOTC = false;
 	bool isOTCR = false;
 
