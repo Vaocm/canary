@@ -2176,9 +2176,11 @@ void PlayerWheel::registerPlayerBonusData() {
 
 		if (m_playerBonusData.stages.divineEmpowerment >= 2) {
 			addSpellBonus("Divine Empowerment", bonus);
+			addSpellBonus("Shadow Pact", bonus); // Soul Eater: Assassin version of this corner perk
 		}
 		if (m_playerBonusData.stages.divineEmpowerment >= 3) {
 			addSpellBonus("Divine Empowerment", bonus);
+			addSpellBonus("Shadow Pact", bonus);
 		}
 	} else {
 		setSpellInstant("Divine Empowerment", false);
@@ -2192,11 +2194,18 @@ void PlayerWheel::registerPlayerBonusData() {
 			WheelSpells::Bonus bonus;
 			bonus.decrease.cooldown = 4 * 1000;
 			addSpellBonus("Divine Grenade", bonus);
+			// Soul Eater: Assassin version (Star Nova): -1 s at stage 2, -2 s at stage 3
+			WheelSpells::Bonus starNovaBonus;
+			starNovaBonus.decrease.cooldown = 1 * 1000;
+			addSpellBonus("Star Nova", starNovaBonus);
 		}
 		if (m_playerBonusData.stages.divineGrenade >= 3) {
 			WheelSpells::Bonus bonus;
 			bonus.decrease.cooldown = 6 * 1000;
 			addSpellBonus("Divine Grenade", bonus);
+			WheelSpells::Bonus starNovaBonus;
+			starNovaBonus.decrease.cooldown = 1 * 1000;
+			addSpellBonus("Star Nova", starNovaBonus);
 		}
 	} else {
 		setSpellInstant("Divine Grenade", false);
