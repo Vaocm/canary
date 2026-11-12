@@ -108,7 +108,12 @@ function flaskPotion.onUse(player, item, fromPosition, target, toPosition, isHot
 		local deactivatedFlasks = player:kv():get("talkaction.potions.flask") or false
 		if not deactivatedFlasks then
 			if fromPosition.x == CONTAINER_POSITION then
-				player:addItem(potion.flask, 1)
+				-- Soul Eater: the empty flask goes back into the same backpack the potion was used from
+				local parent = item:getParent()
+				local flask = parent and parent.isContainer and parent:isContainer() and parent:addItem(potion.flask, 1)
+				if not flask then
+					player:addItem(potion.flask, 1)
+				end
 			else
 				Game.createItem(potion.flask, 1, fromPosition)
 			end
