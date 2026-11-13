@@ -2930,8 +2930,11 @@ bool PlayerWheel::checkPositionalTactics() {
 	m_creaturesNearby = 0;
 	bool updateClient = false;
 	uint16_t creaturesNearby = Spectators().find<Monster>(m_player.getPosition(), false, 1, 1, 1, 1, false).excludePlayerMaster().size();
-	constexpr uint16_t holyMagicSkill = 3;
-	constexpr uint16_t healingMagicSkill = 3;
+	// Soul Eater: the Assassin (11) / Shadow Ninja (12) only get the distance bonus, holy and healing magic level are useless for them
+	const auto wheelVocationId = m_player.getVocation()->getId();
+	const bool isAssassin = wheelVocationId == 11 || wheelVocationId == 12;
+	const uint16_t holyMagicSkill = isAssassin ? 0 : 3;
+	const uint16_t healingMagicSkill = isAssassin ? 0 : 3;
 	constexpr uint16_t distanceSkill = 3;
 	if (creaturesNearby == 0) {
 		m_creaturesNearby = creaturesNearby;
@@ -2973,6 +2976,21 @@ bool PlayerWheel::checkBallisticMastery() {
 	constexpr uint16_t newPhysicalBonus = 2; // 2%
 
 	const auto &item = m_player.getWeapon();
+	// Soul Eater: the Assassin (11) / Shadow Ninja (12) get +10% critical extra damage with any wielded weapon (no bow/crossbow rules)
+	const auto wheelVocationId = m_player.getVocation()->getId();
+	if (wheelVocationId == 11 || wheelVocationId == 12) {
+		const int32_t assassinCritical = item ? newCritical : 0;
+		if (getMajorStat(WheelMajor_t::CRITICAL_DMG) != assassinCritical) {
+			setMajorStat(WheelMajor_t::CRITICAL_DMG, assassinCritical);
+			updateClient = true;
+		}
+		if (getMajorStat(WheelMajor_t::PHYSICAL_DMG) != 0 || getMajorStat(WheelMajor_t::HOLY_DMG) != 0) {
+			setMajorStat(WheelMajor_t::PHYSICAL_DMG, 0);
+			setMajorStat(WheelMajor_t::HOLY_DMG, 0);
+			updateClient = true;
+		}
+		return updateClient;
+	}
 	if (item && item->getAmmoType() == AMMO_BOLT) {
 		if (getMajorStat(WheelMajor_t::CRITICAL_DMG) != newCritical) {
 			setMajorStat(WheelMajor_t::CRITICAL_DMG, newCritical);
