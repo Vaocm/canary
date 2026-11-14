@@ -8372,22 +8372,6 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 				pierce(damage.secondary);
 			}
 
-			// Assassin Venom Coating: spells and auto attacks poison monsters for 3% of the damage dealt, over 3 seconds
-			if (attackerPlayer && targetMonster && attackerPlayer->hasSeStance(SeStance::VenomCoating) && (damage.origin == ORIGIN_SPELL || damage.origin == ORIGIN_MELEE || damage.origin == ORIGIN_RANGED || damage.origin == ORIGIN_FIST)) {
-				const int32_t seHit = std::abs(damage.primary.value + damage.secondary.value);
-				const int32_t sePerTick = std::max<int32_t>(1, seHit / 100);
-				const bool seRunning = target->seVenomTicks > 0;
-				target->seVenomPerTick = seRunning ? std::max(target->seVenomPerTick, sePerTick) : sePerTick;
-				target->seVenomTicks = 3;
-				target->seVenomAttackerId = attackerPlayer->getID();
-				if (!seRunning) {
-					const uint32_t seTargetId = target->getID();
-					g_dispatcher().scheduleEvent(
-						1000, [seTargetId] { InternalGame::seVenomTick(seTargetId); }, "Game::seVenomTick"
-					);
-				}
-			}
-
 			// Aura of Sapped Strength / Exposed Weakness: spells, runes and auto attacks mark the target for 10 seconds
 			if (attackerPlayer && target != attacker && (damage.origin == ORIGIN_SPELL || damage.origin == ORIGIN_MELEE || damage.origin == ORIGIN_RANGED || damage.origin == ORIGIN_FIST)) {
 				if (attackerPlayer->getSeStance(1) == SeStance::SappedStrength) {

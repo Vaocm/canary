@@ -63,7 +63,7 @@ namespace SeStance {
 	constexpr uint8_t ElementalSynthesis = 10; // Druid
 	constexpr uint8_t SharedConservation = 11; // Druid
 	constexpr uint8_t ReapersEdge = 12; // Assassin
-	constexpr uint8_t VenomCoating = 13; // Assassin
+	constexpr uint8_t MendingFocus = 13; // Assassin (replaced Venom Coating): healing spells heal 20% more
 }
 
 enum class Virtue_t : uint8_t {

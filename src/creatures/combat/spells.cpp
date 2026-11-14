@@ -923,11 +923,6 @@ bool Spell::isLearnable() const {
 }
 
 uint32_t Spell::getManaCost(const std::shared_ptr<Player> &player) const {
-	// Soul Eater: Venom Coating stance, mana costs +15%
-	if (player->hasSeStance(SeStance::VenomCoating)) {
-		const uint32_t baseCost = getManaCostBase(player);
-		return baseCost + (baseCost * 15 + 99) / 100;
-	}
 	return getManaCostBase(player);
 }
 

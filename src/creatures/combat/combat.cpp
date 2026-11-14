@@ -826,6 +826,11 @@ void Combat::CombatHealthFunc(const std::shared_ptr<Creature> &caster, const std
 				damage.primary.value *= targetPlayer->getBuff(BUFF_HEALINGRECEIVED) / 100.;
 			}
 
+			// Soul Eater: Assassin Mending Focus stance, healing spells heal 20% more
+			if (attackerPlayer->hasSeStance(SeStance::MendingFocus)) {
+				damage.primary.value *= 1.20;
+			}
+
 			// Soul Eater: Shared Conservation stance, +10% self-healing
 			if (targetPlayer == attackerPlayer && attackerPlayer->hasSeStance(SeStance::SharedConservation)) {
 				damage.primary.value *= 1.10;
