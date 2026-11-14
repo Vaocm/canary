@@ -2903,13 +2903,36 @@ int PlayerFunctions::luaPlayerGetParty(lua_State* L) {
 	return 1;
 }
 
+// Soul Eater: tell the client (parchment banner) when a new outfit / addon is unlocked from a script
+static void seAnnounceOutfitUnlock(const std::shared_ptr<Player> &player, uint16_t lookType, uint8_t addon, bool hadBefore) {
+	if (!player || hadBefore) {
+		return;
+	}
+	const auto &outfit = Outfits::getInstance().getOutfitByLookType(player, lookType);
+	if (!outfit) {
+		return;
+	}
+	std::string extra;
+	if (addon == 1) {
+		extra = " (Addon 1)";
+	} else if (addon == 2) {
+		extra = " (Addon 2)";
+	} else if (addon == 3) {
+		extra = " (Addon 1 & 2)";
+	}
+	player->sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("You have unlocked the outfit '{}'{}.", outfit->name, extra));
+}
+
 int PlayerFunctions::luaPlayerAddOutfit(lua_State* L) {
 	// player:addOutfit(lookType or name, addon = 0)
 	const auto &player = Lua::getUserdataShared<Player>(L, 1, "Player");
 	if (player) {
 		auto addon = Lua::getNumber<uint8_t>(L, 3, 0);
 		if (lua_isnumber(L, 2)) {
-			player->addOutfit(Lua::getNumber<uint16_t>(L, 2), addon);
+			const auto seLook = Lua::getNumber<uint16_t>(L, 2);
+			const bool seHad = player->canWear(seLook, addon);
+			player->addOutfit(seLook, addon);
+			seAnnounceOutfitUnlock(player, seLook, addon, seHad);
 		} else if (lua_isstring(L, 2)) {
 			const std::string &outfitName = Lua::getString(L, 2);
 			const auto &outfit = Outfits::getInstance().getOutfitByName(player->getSex(), outfitName);
@@ -2918,7 +2941,9 @@ int PlayerFunctions::luaPlayerAddOutfit(lua_State* L) {
 				return 1;
 			}
 
+			const bool seHad = player->canWear(outfit->lookType, addon);
 			player->addOutfit(outfit->lookType, addon);
+			seAnnounceOutfitUnlock(player, outfit->lookType, addon, seHad);
 		}
 
 		Lua::pushBoolean(L, true);
@@ -2934,7 +2959,9 @@ int PlayerFunctions::luaPlayerAddOutfitAddon(lua_State* L) {
 	if (player) {
 		const uint16_t lookType = Lua::getNumber<uint16_t>(L, 2);
 		const uint8_t addon = Lua::getNumber<uint8_t>(L, 3);
+		const bool seHad = player->canWear(lookType, addon);
 		player->addOutfit(lookType, addon);
+		seAnnounceOutfitUnlock(player, lookType, addon, seHad);
 		Lua::pushBoolean(L, true);
 	} else {
 		lua_pushnil(L);
