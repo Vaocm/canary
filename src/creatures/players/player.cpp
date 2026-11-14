@@ -3611,6 +3611,39 @@ void Player::addExperience(const std::shared_ptr<Creature> &target, uint64_t exp
 		ss << "You advanced from Level " << prevLevel << " to Level " << level << '.';
 		sendTextMessage(MESSAGE_EVENT_ADVANCE, ss.str());
 		sendTakeScreenshot(SCREENSHOT_TYPE_LEVELUP);
+
+		// Soul Eater: tell the player which instant spells this level gain unlocked (the client shows a popup for the message)
+		if (level > prevLevel && !g_configManager().getBoolean(LEARN_SPELLS)) {
+			std::vector<std::shared_ptr<InstantSpell>> unlocked;
+			for (const auto &spellEntry : g_spells().getInstantSpells()) {
+				const auto &spell = spellEntry.second;
+				if (!spell || !spell->isEnabled() || spell->getNeedLearn() || spell->getName().empty()) {
+					continue;
+				}
+				const uint32_t spellLevel = spell->getLevel();
+				if (spellLevel <= prevLevel || spellLevel > level) {
+					continue;
+				}
+				const auto &vocMap = spell->getVocMap();
+				if (vocMap.empty() || !vocMap.contains(getVocationId())) {
+					continue;
+				}
+				if (spell->isPremium() && !isPremium()) {
+					continue;
+				}
+				unlocked.emplace_back(spell);
+			}
+			std::ranges::sort(unlocked, [](const auto &l, const auto &r) {
+				return l->getLevel() < r->getLevel();
+			});
+			if (unlocked.size() > 3) {
+				sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("You have unlocked {} new spells.", unlocked.size()));
+			} else {
+				for (const auto &spell : unlocked) {
+					sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("You have unlocked the spell '{}' ({}).", spell->getName(), spell->getWords()));
+				}
+			}
+		}
 	}
 
 	if (nextLevelExp > currLevelExp) {
