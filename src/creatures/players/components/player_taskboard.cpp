@@ -2079,18 +2079,36 @@ void PlayerTaskBoard::claimReward() {
 }
 
 void PlayerTaskBoard::reroll() {
-	if (m_state.activeIndex >= 0) {
-		m_player.sendCancelMessage("You cannot reroll while a bounty task is active.");
-		sendBountyData();
-		return;
-	}
 	if (m_state.rerollTokens == 0) {
 		m_player.sendCancelMessage("You do not have any reroll tokens.");
 		sendBountyData();
 		return;
 	}
 	m_state.rerollTokens--;
-	generateOffers();
+
+	// Like real Tibia, a reroll is allowed while a bounty task is in progress: the task you are working on
+	// (or finished but have not claimed yet) is kept as it is, only the other offers are drawn again.
+	const int8_t keepIndex = m_state.activeIndex;
+	if (keepIndex >= 0 && keepIndex < TaskBoard::BOUNTY_OFFERS) {
+		const auto keptOffer = m_state.offers[keepIndex];
+		for (int attempt = 0; attempt < 10; ++attempt) {
+			generateOffers();
+			bool duplicate = false;
+			for (uint8_t i = 0; i < TaskBoard::BOUNTY_OFFERS; ++i) {
+				if (i != keepIndex && m_state.offers[i].raceId == keptOffer.raceId) {
+					duplicate = true;
+					break;
+				}
+			}
+			if (!duplicate) {
+				break;
+			}
+		}
+		m_state.offers[keepIndex] = keptOffer;
+		m_state.activeIndex = keepIndex;
+	} else {
+		generateOffers();
+	}
 	save();
 	sendBountyData();
 }
