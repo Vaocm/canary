@@ -190,11 +190,18 @@ void ProtocolStatus::sendInfo(uint16_t requestedInfo, const std::string &charact
 	if (requestedInfo & REQUEST_EXT_PLAYERS_INFO) {
 		output->addByte(0x21); // players info - online players list
 
-		const auto players = g_game().getPlayers();
-		output->add<uint32_t>(players.size());
-		for (const auto &it : players) {
-			output->addString(it.second->getName());
-			output->add<uint32_t>(it.second->getLevel());
+		// Soul Eater: the public online list never contains staff (ghost mode or GM/access groups)
+		std::vector<std::shared_ptr<Player>> listedPlayers;
+		for (const auto &it : g_game().getPlayers()) {
+			if (it.second->isInGhostMode() || it.second->isAccessPlayer()) {
+				continue;
+			}
+			listedPlayers.emplace_back(it.second);
+		}
+		output->add<uint32_t>(static_cast<uint32_t>(listedPlayers.size()));
+		for (const auto &listed : listedPlayers) {
+			output->addString(listed->getName());
+			output->add<uint32_t>(listed->getLevel());
 		}
 	}
 

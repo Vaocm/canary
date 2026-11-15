@@ -12950,7 +12950,8 @@ std::map<uint32_t, std::vector<std::shared_ptr<Player>>> Game::groupPlayersByIP(
 	std::map<uint32_t, std::vector<std::shared_ptr<Player>>> groupedPlayers;
 	for (const auto &player : getPlayers() | std::views::values) {
 		const uint32_t ip = player->getIP();
-		if (ip != 0 && player->getIdleTime() <= IDLE_THRESHOLD_MS) {
+		// Soul Eater: staff (ghost mode or GM/access groups) is not counted in the public online total
+		if (ip != 0 && player->getIdleTime() <= IDLE_THRESHOLD_MS && !player->isInGhostMode() && !player->isAccessPlayer()) {
 			groupedPlayers[ip].emplace_back(player);
 		}
 	}
