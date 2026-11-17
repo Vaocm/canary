@@ -8115,7 +8115,9 @@ void Game::applyWheelOfDestinyHealing(CombatDamage &damage, const std::shared_pt
 
 			// Soul Eater (Vocation Adjustments 2026): with Blessing of the Grove, Heal Friend and Nature's Embrace can
 			// critically heal, using the Druid's critical hit chance and critical extra damage.
-			if (damage.origin == ORIGIN_SPELL && (damage.instantSpellName == "Heal Friend" || damage.instantSpellName == "Nature's Embrace")) {
+			// (no origin check: health-change scripts reset damage.origin to ORIGIN_NONE before healing bonuses are applied;
+			// the spell name is only set by a real cast)
+			if (damage.instantSpellName == "Heal Friend" || damage.instantSpellName == "Nature's Embrace") {
 				const int32_t critChance = attackerPlayer->getSkillLevel(SKILL_CRITICAL_HIT_CHANCE);
 				const int32_t critExtra = attackerPlayer->getSkillLevel(SKILL_CRITICAL_HIT_DAMAGE);
 				if (critChance > 0 && uniform_random(1, 10000) <= critChance) {
