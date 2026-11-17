@@ -8192,9 +8192,9 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 		realHealthChange = target->getHealth() - realHealthChange;
 
 		if (realHealthChange > 0 && !target->isInGhostMode()) {
-			// Soul Eater: critical heals (Blessing of the Grove) show the critical effect on the healed creature
+			// Soul Eater: critical heals (Blessing of the Grove) show the official Critical Heal effect (389) on the healed creature
 			if (damage.critical) {
-				addMagicEffect(targetPos, CONST_ME_CRITICAL_DAMAGE);
+				addMagicEffect(targetPos, 389);
 			}
 			if (targetPlayer) {
 				targetPlayer->updateImpactTracker(COMBAT_HEALING, realHealthChange);
