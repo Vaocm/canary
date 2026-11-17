@@ -8045,6 +8045,21 @@ void Game::applyWheelOfDestinyHealing(CombatDamage &damage, const std::shared_pt
 
 		if (attackerPlayer->wheel().getInstant("Blessing of the Grove")) {
 			damage.primary.value += (damage.primary.value * attackerPlayer->wheel().checkBlessingGroveHealingByTarget(target)) / 100.;
+
+			// Soul Eater (Vocation Adjustments 2026): with Blessing of the Grove, Heal Friend and Nature's Embrace can
+			// critically heal, using the Druid's critical hit chance and critical extra damage.
+			if (damage.origin == ORIGIN_SPELL && (damage.instantSpellName == "Heal Friend" || damage.instantSpellName == "Nature's Embrace")) {
+				const int32_t critChance = attackerPlayer->getSkillLevel(SKILL_CRITICAL_HIT_CHANCE);
+				const int32_t critExtra = attackerPlayer->getSkillLevel(SKILL_CRITICAL_HIT_DAMAGE);
+				if (critChance > 0 && uniform_random(1, 10000) <= critChance) {
+					const double critMultiplier = 1.0 + static_cast<double>(critExtra) / 10000.0;
+					damage.primary.value = static_cast<int32_t>(damage.primary.value * critMultiplier);
+					if (damage.secondary.value != 0) {
+						damage.secondary.value = static_cast<int32_t>(damage.secondary.value * critMultiplier);
+					}
+					damage.critical = true;
+				}
+			}
 		}
 	}
 }
@@ -8145,6 +8160,10 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 		realHealthChange = target->getHealth() - realHealthChange;
 
 		if (realHealthChange > 0 && !target->isInGhostMode()) {
+			// Soul Eater: critical heals (Blessing of the Grove) show the critical effect on the healed creature
+			if (damage.critical) {
+				addMagicEffect(targetPos, CONST_ME_CRITICAL_DAMAGE);
+			}
 			if (targetPlayer) {
 				targetPlayer->updateImpactTracker(COMBAT_HEALING, realHealthChange);
 			}
