@@ -3796,6 +3796,19 @@ void Player::onAttackedCreatureBlockHit(const BlockType_t &blockType) {
 	}
 }
 
+bool Player::hasRealShield() const {
+	const auto &itemLeft = inventory[CONST_SLOT_LEFT];
+	if (itemLeft && itemLeft->getWeaponType() == WEAPON_SHIELD && !itemLeft->isSpellBook()) {
+		return true;
+	}
+
+	const auto &itemRight = inventory[CONST_SLOT_RIGHT];
+	if (itemRight && itemRight->getWeaponType() == WEAPON_SHIELD && !itemRight->isSpellBook()) {
+		return true;
+	}
+	return false;
+}
+
 bool Player::hasShield() const {
 	const auto &itemLeft = inventory[CONST_SLOT_LEFT];
 	if (itemLeft && itemLeft->getWeaponType() == WEAPON_SHIELD) {

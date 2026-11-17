@@ -783,6 +783,7 @@ public:
 	bool isImmune(CombatType_t type) const override;
 	bool isImmune(ConditionType_t type) const override;
 	bool hasShield() const;
+	bool hasRealShield() const; // Soul Eater: like hasShield(), but spellbooks do not count
 	bool isAttackable() const override;
 	void beginBatchUpdate();
 	void endBatchUpdate();

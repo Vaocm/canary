@@ -2568,11 +2568,8 @@ bool Monster::challengeCreature(const std::shared_ptr<Creature> &creature, int t
 	if (result) {
 		challengeFocusDuration = targetChangeCooldown;
 		targetChangeTicks = 0;
-		// Wheel of destiny
-		const auto &player = creature ? creature->getPlayer() : nullptr;
-		if (player && !player->isRemoved()) {
-			player->wheel().healIfBattleHealingActive();
-		}
+		// Soul Eater (Vocation Adjustments 2026): Battle Healing no longer heals on challenge; it boosts spell and rune healing instead
+		// (Game::applyWheelOfDestinyHealing).
 	}
 	return result;
 }

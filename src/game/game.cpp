@@ -8025,6 +8025,19 @@ float Game::pvpLevelDifferenceDamageMultiplier(const std::shared_ptr<Player> &at
 	return levelDiffRate;
 }
 
+// Soul Eater: true while the Monk's Sanctuary is active and the creature stands right next to the Monk
+static bool seSanctuaryAdjacent(const std::shared_ptr<Player> &player, const std::shared_ptr<Creature> &creature) {
+	if (!player || !creature || !player->wheel().getInstant(WheelInstant_t::SANCTUARY)) {
+		return false;
+	}
+	if (!player->hasCondition(CONDITION_ATTRIBUTES, magic_enum::enum_integer(AttrSubId_t::Sanctuary))) {
+		return false;
+	}
+	const Position &casterPos = player->getPosition();
+	const Position &otherPos = creature->getPosition();
+	return Position::getDistanceZ(casterPos, otherPos) == 0 && Position::getDistanceX(casterPos, otherPos) <= 1 && Position::getDistanceY(casterPos, otherPos) <= 1;
+}
+
 // Wheel of destiny combat helpers
 void Game::applyWheelOfDestinyHealing(CombatDamage &damage, const std::shared_ptr<Player> &attackerPlayer, std::shared_ptr<Creature> target) {
 	damage.primary.value += (damage.primary.value * damage.healingMultiplier) / 100.;
@@ -8034,6 +8047,20 @@ void Game::applyWheelOfDestinyHealing(CombatDamage &damage, const std::shared_pt
 
 		if (damage.secondary.value != 0) {
 			damage.secondary.value += attackerPlayer->wheel().getStat(WheelStat_t::HEALING);
+		}
+
+		// Soul Eater (Vocation Adjustments 2026): Battle Healing boosts your own spell and rune healing by 10%, or 30% with a shield.
+		if ((!damage.instantSpellName.empty() || !damage.runeSpellName.empty()) && attackerPlayer->wheel().getInstant("Battle Healing")) {
+			const double battleHealingFactor = attackerPlayer->hasRealShield() ? 1.30 : 1.10;
+			damage.primary.value = static_cast<int32_t>(std::round(damage.primary.value * battleHealingFactor));
+			if (damage.secondary.value != 0) {
+				damage.secondary.value = static_cast<int32_t>(std::round(damage.secondary.value * battleHealingFactor));
+			}
+		}
+
+		// Soul Eater (Vocation Adjustments 2026): during Sanctuary, allies next to the Monk are healed 10% more
+		if (target && target != attackerPlayer && seSanctuaryAdjacent(attackerPlayer, target)) {
+			damage.primary.value = static_cast<int32_t>(std::round(damage.primary.value * 1.10));
 		}
 
 		if (damage.healingLink > 0) {
@@ -8100,6 +8127,11 @@ void Game::applyWheelOfDestinyEffectsToDamage(CombatDamage &damage, const std::s
 				damage.primary.value += (damage.primary.value * damageBonus) / 100.;
 				damage.secondary.value += (damage.secondary.value * damageBonus) / 100.;
 			}
+		}
+		// Soul Eater (Vocation Adjustments 2026): during Sanctuary, enemies next to the Monk take 10% more damage
+		if (target && target != attackerPlayer && seSanctuaryAdjacent(attackerPlayer, target)) {
+			damage.primary.value = static_cast<int32_t>(std::round(damage.primary.value * 1.10));
+			damage.secondary.value = static_cast<int32_t>(std::round(damage.secondary.value * 1.10));
 		}
 	}
 }
@@ -8349,6 +8381,43 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 		if (damage.origin != ORIGIN_NONE && target && damage.primary.type != COMBAT_HEALING) {
 			damage.primary.value *= target->getBuff(BUFF_DAMAGERECEIVED) / 100.;
 			damage.secondary.value *= target->getBuff(BUFF_DAMAGERECEIVED) / 100.;
+		}
+		// Soul Eater (Vocation Adjustments 2026): Combat Mastery (Knight). Deal +1% damage per 12/10/8% of the target's missing
+		// health (doubled with a two-handed weapon); take -1% damage per 12/10/8% of your own missing health (doubled with a
+		// shield, at most 50%). 12/10/8 = stage 1/2/3.
+		if (damage.origin != ORIGIN_NONE && damage.primary.type != COMBAT_HEALING) {
+			if (attackerPlayer && target && target->getMaxHealth() > 0) {
+				const uint8_t stage = attackerPlayer->wheel().getStage(WheelStage_t::COMBAT_MASTERY);
+				if (stage > 0) {
+					const int32_t threshold = stage >= 3 ? 8 : (stage >= 2 ? 10 : 12);
+					const int32_t targetMissingPct = static_cast<int32_t>((static_cast<int64_t>(target->getMaxHealth() - target->getHealth()) * 100) / target->getMaxHealth());
+					int32_t bonusPct = targetMissingPct / threshold;
+					const auto &weapon = attackerPlayer->getWeapon();
+					if (weapon && (weapon->getSlotPosition() & SLOTP_TWO_HAND)) {
+						bonusPct *= 2;
+					}
+					if (bonusPct > 0) {
+						damage.primary.value += (damage.primary.value * bonusPct) / 100.;
+						damage.secondary.value += (damage.secondary.value * bonusPct) / 100.;
+					}
+				}
+			}
+			if (targetPlayer && targetPlayer->getMaxHealth() > 0) {
+				const uint8_t stage = targetPlayer->wheel().getStage(WheelStage_t::COMBAT_MASTERY);
+				if (stage > 0) {
+					const int32_t threshold = stage >= 3 ? 8 : (stage >= 2 ? 10 : 12);
+					const int32_t ownMissingPct = static_cast<int32_t>((static_cast<int64_t>(targetPlayer->getMaxHealth() - targetPlayer->getHealth()) * 100) / targetPlayer->getMaxHealth());
+					int32_t reductionPct = ownMissingPct / threshold;
+					if (targetPlayer->hasRealShield()) {
+						reductionPct *= 2;
+					}
+					reductionPct = std::min<int32_t>(reductionPct, 50);
+					if (reductionPct > 0) {
+						damage.primary.value -= (damage.primary.value * reductionPct) / 100.;
+						damage.secondary.value -= (damage.secondary.value * reductionPct) / 100.;
+					}
+				}
+			}
 		}
 		// Soul Eater: stance spells (Vocation Adjustments 2026)
 		if (damage.origin != ORIGIN_NONE && damage.origin != ORIGIN_CONDITION && damage.primary.type != COMBAT_HEALING) {

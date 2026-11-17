@@ -87,7 +87,8 @@ namespace InternalPlayerWheel {
 				spell->setWheelOfDestinyBoost(WheelSpellBoost_t::CRITICAL_DAMAGE, gradeType, increaseData.criticalDamage);
 			}
 			if (increaseData.criticalChance > 0) {
-				spell->setWheelOfDestinyBoost(WheelSpellBoost_t::CRITICAL_CHANCE, gradeType, increaseData.criticalChance);
+				// Soul Eater: the table is in % but the combat crit roll uses hundredths of a percent (10000 = 100%)
+				spell->setWheelOfDestinyBoost(WheelSpellBoost_t::CRITICAL_CHANCE, gradeType, increaseData.criticalChance * 100);
 			}
 
 			// Decrease data
@@ -256,7 +257,8 @@ void IOWheel::initializeMapData() {
 
 void IOWheel::initializeDruidSpells() {
 	m_wheelBonusData.spells.druid[0].name = "Strong Ice Wave";
-	m_wheelBonusData.spells.druid[0].grade[1].increase.damage = 6; // grade II (Expanded Shape) has no server effect yet
+	m_wheelBonusData.spells.druid[0].grade[1].increase.damage = 6;
+	m_wheelBonusData.spells.druid[0].grade[2].increase.area = true; // Soul Eater (Vocation Adjustments 2026): II enlarged area (strong_ice_wave.lua)
 
 	m_wheelBonusData.spells.druid[1].name = "Mass Healing";
 	m_wheelBonusData.spells.druid[1].grade[1].increase.heal = 4;
@@ -277,19 +279,22 @@ void IOWheel::initializeDruidSpells() {
 
 void IOWheel::initializeKnightSpells() {
 	m_wheelBonusData.spells.knight[0].name = "Front Sweep";
-	m_wheelBonusData.spells.knight[0].grade[1].increase.damage = 40; // grade II (Expanded Shape) has no server effect yet
+	m_wheelBonusData.spells.knight[0].grade[1].increase.damage = 40;
+	m_wheelBonusData.spells.knight[0].grade[2].increase.area = true; // Soul Eater (Vocation Adjustments 2026): II enlarged shape (front_sweep.lua)
 
 	m_wheelBonusData.spells.knight[1].name = "Groundshaker";
 	m_wheelBonusData.spells.knight[1].grade[1].decrease.cooldown = 2;
 	m_wheelBonusData.spells.knight[1].grade[2].increase.damage = static_cast<int>(std::round(12.5));
 
-	m_wheelBonusData.spells.knight[2].name = "Chivalrous Challenge";
-	m_wheelBonusData.spells.knight[2].grade[1].decrease.manaCost = 20;
-	m_wheelBonusData.spells.knight[2].grade[2].increase.additionalTarget = 1;
+	// Soul Eater (Vocation Adjustments 2026): Augmented Shield Slam replaces Augmented Chivalrous Challenge.
+	// I: +15% life leech. II: +25% damage reduction (as on Crystal Server, this field has no effect yet).
+	m_wheelBonusData.spells.knight[2].name = "Shield Slam";
+	m_wheelBonusData.spells.knight[2].grade[1].leech.life = 15;
+	m_wheelBonusData.spells.knight[2].grade[2].increase.damageReduction = 25;
 
 	m_wheelBonusData.spells.knight[3].name = "Intense Wound Cleansing";
 	m_wheelBonusData.spells.knight[3].grade[1].increase.heal = 125;
-	m_wheelBonusData.spells.knight[3].grade[2].decrease.cooldown = 60;
+	m_wheelBonusData.spells.knight[3].grade[2].decrease.cooldown = 300; // Soul Eater (Vocation Adjustments 2026): was 60
 
 	m_wheelBonusData.spells.knight[4].name = "Fierce Berserk";
 	m_wheelBonusData.spells.knight[4].grade[1].decrease.manaCost = 30;
@@ -297,9 +302,10 @@ void IOWheel::initializeKnightSpells() {
 }
 
 void IOWheel::initializePaladinSpells() {
-	m_wheelBonusData.spells.paladin[0].name = "Sharpshooter";
-	m_wheelBonusData.spells.paladin[0].grade[1].decrease.secondaryGroupCooldown = 8;
-	m_wheelBonusData.spells.paladin[0].grade[2].decrease.cooldown = 6;
+	// Soul Eater (Vocation Adjustments 2026): Augmented Ethereal Barrage replaces Augmented Sharpshooter. I: +10% life leech, II: +10% critical hit chance.
+	m_wheelBonusData.spells.paladin[0].name = "Ethereal Barrage";
+	m_wheelBonusData.spells.paladin[0].grade[1].leech.life = 10;
+	m_wheelBonusData.spells.paladin[0].grade[2].increase.criticalChance = 10;
 
 	m_wheelBonusData.spells.paladin[1].name = "Strong Ethereal Spear";
 	m_wheelBonusData.spells.paladin[1].grade[1].decrease.cooldown = 2;
@@ -310,13 +316,14 @@ void IOWheel::initializePaladinSpells() {
 	m_wheelBonusData.spells.paladin[2].grade[2].increase.duration = 4;
 	m_wheelBonusData.spells.paladin[2].grade[2].decrease.cooldown = 8;
 
-	m_wheelBonusData.spells.paladin[3].name = "Swift Foot";
-	m_wheelBonusData.spells.paladin[3].grade[1].decrease.secondaryGroupCooldown = 8;
-	m_wheelBonusData.spells.paladin[3].grade[2].decrease.cooldown = 6;
+	// Soul Eater (Vocation Adjustments 2026): Augmented Divine Barrage replaces Augmented Swift Foot. I: +10% base damage, II: +15% more.
+	m_wheelBonusData.spells.paladin[3].name = "Divine Barrage";
+	m_wheelBonusData.spells.paladin[3].grade[1].increase.damage = 10;
+	m_wheelBonusData.spells.paladin[3].grade[2].increase.damage = 15;
 
 	m_wheelBonusData.spells.paladin[4].name = "Divine Caldera";
 	m_wheelBonusData.spells.paladin[4].grade[1].decrease.manaCost = 20;
-	m_wheelBonusData.spells.paladin[4].grade[2].increase.damage = 10;
+	m_wheelBonusData.spells.paladin[4].grade[2].increase.damage = 9; // Soul Eater (Vocation Adjustments 2026): 8.5%, rounded like Crystal Server
 }
 
 void IOWheel::initializeSorcererSpells() {
@@ -337,6 +344,7 @@ void IOWheel::initializeSorcererSpells() {
 
 	m_wheelBonusData.spells.sorcerer[3].name = "Great Fire Wave";
 	m_wheelBonusData.spells.sorcerer[3].grade[1].increase.criticalDamage = 15;
+	m_wheelBonusData.spells.sorcerer[3].grade[1].increase.criticalChance = 10; // Soul Eater (Vocation Adjustments 2026)
 	m_wheelBonusData.spells.sorcerer[3].grade[2].increase.damage = 5;
 
 	m_wheelBonusData.spells.sorcerer[4].name = "Any_Focus_Mage_Spell";
@@ -354,22 +362,25 @@ void IOWheel::initializeMonkSpells() {
 	// Mystic Repulse: Grade 1 reduces cooldown; Grade 2 increases damage
 	m_wheelBonusData.spells.monk[1].name = "Mystic Repulse";
 	m_wheelBonusData.spells.monk[1].grade[1].decrease.cooldown = 6;
-	m_wheelBonusData.spells.monk[1].grade[2].increase.damage = 60;
+	m_wheelBonusData.spells.monk[1].grade[2].increase.damage = 40; // Soul Eater (Vocation Adjustments 2026): was 60
 
-	// Chained Penance: Grade 1 adds 1 extra target; Grade 2 increases damage
+	// Chained Penance: Grade 1 adds 1 extra target; Grade 2 adds 1 more (Soul Eater, Vocation Adjustments 2026: was +18% damage)
+	// (the target count is read per grade, so grade 2 holds the total of +2)
 	m_wheelBonusData.spells.monk[2].name = "Chained Penance";
 	m_wheelBonusData.spells.monk[2].grade[1].increase.additionalTarget = 1;
-	m_wheelBonusData.spells.monk[2].grade[2].increase.damage = 18;
+	m_wheelBonusData.spells.monk[2].grade[2].increase.additionalTarget = 2;
 
-	// Flurry of Blows: Grade 1 (range +1) not implemented; Grade 2 increases damage
+	// Flurry of Blows: Grade 1 enlarges the area (flurry_of_blows.lua, kept at grade 2); Grade 2 increases damage
 	m_wheelBonusData.spells.monk[3].name = "Flurry of Blows";
-	m_wheelBonusData.spells.monk[3].grade[2].increase.damage = 15; // grade I (range +1) has no server effect yet
+	m_wheelBonusData.spells.monk[3].grade[1].increase.area = true;
+	m_wheelBonusData.spells.monk[3].grade[2].increase.area = true;
+	m_wheelBonusData.spells.monk[3].grade[2].increase.damage = 15;
 
-	// Sweeping Takedown: Grade 1 grants mana leech; Grade 2 increases critical stats
-	m_wheelBonusData.spells.monk[4].name = "Sweeping Takedown";
-	m_wheelBonusData.spells.monk[4].grade[1].leech.mana = 3;
-	m_wheelBonusData.spells.monk[4].grade[2].increase.criticalDamage = 25;
-	m_wheelBonusData.spells.monk[4].grade[2].increase.criticalChance = 10;
+	// Soul Eater (Vocation Adjustments 2026): Augmented Thousand Fist Blows replaces Augmented Sweeping Takedown.
+	// Grade 1: +40% critical extra damage; Grade 2: -6s cooldown
+	m_wheelBonusData.spells.monk[4].name = "Thousand Fist Blows";
+	m_wheelBonusData.spells.monk[4].grade[1].increase.criticalDamage = 40;
+	m_wheelBonusData.spells.monk[4].grade[2].decrease.cooldown = 6;
 }
 
 // Soul Eater: the Assassin shares the Paladin wheel layout, but its five augmented-spell slices unlock Assassin spells.
@@ -427,9 +438,11 @@ void IOWheel::addSpell(const std::shared_ptr<Player> &player, PlayerWheelMethods
 		if (const auto &vocation = player->getVocation(); vocation && (vocation->getId() == 11 || vocation->getId() == 12)) {
 			static const std::unordered_map<std::string, std::string> assassinSpells = {
 				{ "Sharpshooter", "Blood Rush" },
+				{ "Ethereal Barrage", "Blood Rush" }, // Soul Eater: the Paladin slice is now Ethereal Barrage
 				{ "Strong Ethereal Spear", "Knife Bloom" },
 				{ "Divine Dazzle", "Chain Shuriken" },
 				{ "Swift Foot", "Caltrops" },
+				{ "Divine Barrage", "Caltrops" }, // Soul Eater: the Paladin slice is now Divine Barrage
 				{ "Divine Caldera", "Kunai Fan" },
 			};
 			if (const auto it = assassinSpells.find(spellName); it != assassinSpells.end()) {
@@ -589,7 +602,7 @@ void IOWheel::slotRed200(const std::shared_ptr<Player> &player, uint16_t points,
 		bonusData.stats.health += 3 * points;
 		bonusData.stats.mana += 1 * points;
 	} else if (isPaladin(vocationCipId)) {
-		addSpell(player, bonusData, WheelSlots_t::SLOT_RED_200, points, "Sharpshooter");
+		addSpell(player, bonusData, WheelSlots_t::SLOT_RED_200, points, "Ethereal Barrage");
 		bonusData.stats.health += 2 * points;
 		bonusData.stats.mana += 3 * points;
 	} else if (isSorcerer(vocationCipId) || isDruid(vocationCipId)) {
@@ -603,7 +616,7 @@ void IOWheel::slotRed200(const std::shared_ptr<Player> &player, uint16_t points,
 		bonusData.stats.health += 1 * points;
 		bonusData.stats.mana += 6 * points;
 	} else {
-		addSpell(player, bonusData, WheelSlots_t::SLOT_RED_200, points, "Sweeping Takedown");
+		addSpell(player, bonusData, WheelSlots_t::SLOT_RED_200, points, "Thousand Fist Blows");
 		bonusData.stats.health += 2 * points;
 		bonusData.stats.mana += 2 * points;
 	}
@@ -668,7 +681,7 @@ void IOWheel::slotRedTop75(const std::shared_ptr<Player> &player, uint16_t point
 // SLOT_RED_MIDDLE_100 = 11
 void IOWheel::slotRedMiddle100(const std::shared_ptr<Player> &player, uint16_t points, uint8_t vocationCipId, PlayerWheelMethodsBonusData &bonusData) const {
 	if (isKnight(vocationCipId)) {
-		addSpell(player, bonusData, WheelSlots_t::SLOT_RED_MIDDLE_100, points, "Chivalrous Challenge");
+		addSpell(player, bonusData, WheelSlots_t::SLOT_RED_MIDDLE_100, points, "Shield Slam");
 		bonusData.stats.mana += 1 * points;
 	} else if (isPaladin(vocationCipId)) {
 		addSpell(player, bonusData, WheelSlots_t::SLOT_RED_MIDDLE_100, points, "Divine Dazzle");
@@ -709,7 +722,7 @@ void IOWheel::slotGreenBottom100(const std::shared_ptr<Player> &player, uint16_t
 		bonusData.stats.health += 3 * points;
 	} else if (isPaladin(vocationCipId) || isMonk(vocationCipId)) {
 		if (isPaladin(vocationCipId)) {
-			addSpell(player, bonusData, WheelSlots_t::SLOT_GREEN_BOTTOM_100, points, "Swift Foot");
+			addSpell(player, bonusData, WheelSlots_t::SLOT_GREEN_BOTTOM_100, points, "Divine Barrage");
 		} else {
 			addSpell(player, bonusData, WheelSlots_t::SLOT_GREEN_BOTTOM_100, points, "Chained Penance");
 		}
@@ -832,7 +845,7 @@ void IOWheel::slotBlue50(const std::shared_ptr<Player> &player, uint16_t points,
 		addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_50, points, "Front Sweep");
 		bonusData.stats.mana += 1 * points;
 	} else if (isPaladin(vocationCipId)) {
-		addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_50, points, "Sharpshooter");
+		addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_50, points, "Ethereal Barrage");
 		bonusData.stats.mana += 3 * points;
 	} else if (isSorcerer(vocationCipId) || isDruid(vocationCipId)) {
 		if (isSorcerer(vocationCipId)) {
@@ -844,7 +857,7 @@ void IOWheel::slotBlue50(const std::shared_ptr<Player> &player, uint16_t points,
 		}
 		bonusData.stats.mana += 6 * points;
 	} else {
-		addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_50, points, "Sweeping Takedown");
+		addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_50, points, "Thousand Fist Blows");
 		bonusData.stats.mana += 2 * points;
 	}
 }
@@ -924,7 +937,7 @@ void IOWheel::slotBlueTop150(const std::shared_ptr<Player> &player, uint16_t poi
 void IOWheel::slotBlueMiddle100(const std::shared_ptr<Player> &player, uint16_t points, uint8_t vocationCipId, PlayerWheelMethodsBonusData &bonusData) const {
 	bonusData.mitigation += MITIGATION_INCREASE * points;
 	if (isKnight(vocationCipId)) {
-		addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_MIDDLE_100, points, "Chivalrous Challenge");
+		addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_MIDDLE_100, points, "Shield Slam");
 	} else if (isPaladin(vocationCipId)) {
 		addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_MIDDLE_100, points, "Divine Dazzle");
 	} else if (isSorcerer(vocationCipId) || isDruid(vocationCipId)) {
@@ -970,7 +983,7 @@ void IOWheel::slotPurpleMiddle100(const std::shared_ptr<Player> &player, uint16_
 		}
 		bonusData.stats.capacity += 5 * points;
 	} else if (isPaladin(vocationCipId)) {
-		addSpell(player, bonusData, WheelSlots_t::SLOT_PURPLE_MIDDLE_100, points, "Swift Foot");
+		addSpell(player, bonusData, WheelSlots_t::SLOT_PURPLE_MIDDLE_100, points, "Divine Barrage");
 		bonusData.stats.capacity += 4 * points;
 	} else {
 		if (isSorcerer(vocationCipId)) {

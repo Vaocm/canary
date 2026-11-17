@@ -2192,7 +2192,7 @@ void PlayerWheel::registerPlayerBonusData() {
 		}
 		if (m_playerBonusData.stages.divineGrenade >= 2) {
 			WheelSpells::Bonus bonus;
-			bonus.decrease.cooldown = 4 * 1000;
+			bonus.decrease.cooldown = 6 * 1000; // Soul Eater (Vocation Adjustments 2026): stage 2 -6s, stage 3 -4s more (was -4s / -6s)
 			addSpellBonus("Divine Grenade", bonus);
 			// Soul Eater: Assassin version (Star Nova): -1 s at stage 2, -2 s at stage 3
 			WheelSpells::Bonus starNovaBonus;
@@ -2201,7 +2201,7 @@ void PlayerWheel::registerPlayerBonusData() {
 		}
 		if (m_playerBonusData.stages.divineGrenade >= 3) {
 			WheelSpells::Bonus bonus;
-			bonus.decrease.cooldown = 6 * 1000;
+			bonus.decrease.cooldown = 4 * 1000;
 			addSpellBonus("Divine Grenade", bonus);
 			WheelSpells::Bonus starNovaBonus;
 			starNovaBonus.decrease.cooldown = 1 * 1000;
@@ -3028,47 +3028,17 @@ bool PlayerWheel::checkBallisticMastery() {
 
 bool PlayerWheel::checkCombatMastery() {
 	setOnThinkTimer(WheelOnThink_t::COMBAT_MASTERY, OTSYS_TIME() + 2000);
+	// Soul Eater (Vocation Adjustments 2026): Combat Mastery now works on missing health (Game::combatChangeHealth).
+	// Its old two-handed critical damage and shield defense bonuses are cleared so they do not stack with the new effect.
 	bool updateClient = false;
-	const uint8_t stage = getStage(WheelStage_t::COMBAT_MASTERY);
-
-	const auto &item = m_player.getWeapon();
-	if (item && item->getSlotPosition() & SLOTP_TWO_HAND) {
-		int32_t criticalSkill = 0;
-		if (stage >= 3) {
-			criticalSkill = 1200;
-		} else if (stage >= 2) {
-			criticalSkill = 800;
-		} else if (stage >= 1) {
-			criticalSkill = 400;
-		}
-
-		if (getMajorStat(WheelMajor_t::CRITICAL_DMG_2) != criticalSkill) {
-			setMajorStat(WheelMajor_t::CRITICAL_DMG_2, criticalSkill);
-			updateClient = true;
-		}
-		if (getMajorStat(WheelMajor_t::DEFENSE) != 0) {
-			setMajorStat(WheelMajor_t::DEFENSE, 0);
-			updateClient = true;
-		}
-	} else {
-		if (getMajorStat(WheelMajor_t::CRITICAL_DMG_2) != 0) {
-			setMajorStat(WheelMajor_t::CRITICAL_DMG_2, 0);
-			updateClient = true;
-		}
-		if (getMajorStat(WheelMajor_t::DEFENSE) == 0) {
-			int32_t shieldSkill = 0;
-			if (stage >= 3) {
-				shieldSkill = 30;
-			} else if (stage >= 2) {
-				shieldSkill = 20;
-			} else if (stage >= 1) {
-				shieldSkill = 10;
-			}
-			setMajorStat(WheelMajor_t::DEFENSE, shieldSkill);
-			updateClient = true;
-		}
+	if (getMajorStat(WheelMajor_t::CRITICAL_DMG_2) != 0) {
+		setMajorStat(WheelMajor_t::CRITICAL_DMG_2, 0);
+		updateClient = true;
 	}
-
+	if (getMajorStat(WheelMajor_t::DEFENSE) != 0) {
+		setMajorStat(WheelMajor_t::DEFENSE, 0);
+		updateClient = true;
+	}
 	return updateClient;
 }
 
@@ -3141,6 +3111,13 @@ void PlayerWheel::checkGiftOfLife() {
 	m_player.sendTextMessage(MESSAGE_EVENT_ADVANCE, "That was close! Fortunately, your were saved by the Gift of Life.");
 	g_game().addMagicEffect(m_player.getPosition(), CONST_ME_WATER_DROP);
 	g_game().combatChangeHealth(m_player.getPlayer(), m_player.getPlayer(), giftDamage);
+	// Soul Eater (Vocation Adjustments 2026): Gift of Life also restores 20/25/30% of max mana (same stage scaling as the health heal)
+	if (m_player.getMaxMana() > 0) {
+		CombatDamage giftMana;
+		giftMana.primary.value = (m_player.getMaxMana() * getGiftOfLifeValue()) / 100;
+		giftMana.primary.type = COMBAT_MANADRAIN;
+		g_game().combatChangeMana(m_player.getPlayer(), m_player.getPlayer(), giftMana);
+	}
 	// Condition cooldown reduction
 	constexpr uint16_t reductionTimer = 60000;
 	reduceAllSpellsCooldownTimer(reductionTimer);
@@ -4055,7 +4032,8 @@ float PlayerWheel::calculateMitigation() const {
 			defenseValue = weapon->getDefense() + weapon->getExtraDefense();
 			shieldFactor = m_player.vocation->mitigationSecondaryShield;
 		} else {
-			defenseValue += weapon->getExtraDefense();
+			// Soul Eater (Vocation Adjustments 2026): a one-handed weapon adds its full defense, not only its extra defense
+			defenseValue += weapon->getDefense() + weapon->getExtraDefense();
 			shieldFactor = m_player.vocation->mitigationPrimaryShield;
 		}
 	}
