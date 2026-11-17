@@ -2843,14 +2843,22 @@ void ProtocolGame::sendTeamFinderList() {
 	msg.addByte(0x00); // Bool value, with 'true' the player exceed packets for second.
 	const auto &teamFinder = g_game().getTeamFinderList();
 	// count only teams whose leader is online, so the list size always matches the entries written
+	// teams disappear 30 minutes after their start time (official behaviour)
+	const auto expiredBefore = static_cast<uint32_t>(OTSYS_TIME() / 1000) - 30 * 60;
+	const auto isListed = [&expiredBefore](const auto &it) {
+		return it.second && it.second->timestamp >= expiredBefore && g_game().getPlayerByGUID(it.first);
+	};
 	uint16_t listed = 0;
 	for (const auto &it : teamFinder) {
-		if (it.second && g_game().getPlayerByGUID(it.first)) {
+		if (isListed(it)) {
 			++listed;
 		}
 	}
 	msg.add<uint16_t>(listed);
 	for (const auto &it : teamFinder) {
+		if (!isListed(it)) {
+			continue;
+		}
 		const auto &leader = g_game().getPlayerByGUID(it.first);
 		if (!leader) {
 			continue;
@@ -3121,6 +3129,10 @@ void ProtocolGame::parseLeaderFinderWindow(NetworkMessage &msg) {
 				}
 				case 3: {
 					member->sendTextMessage(MESSAGE_STATUS, "Your team finder request was accepted.");
+					// like the official client: accepting someone invites them to the leader's party
+					if (!member->getParty() || member->getParty() != player->getParty()) {
+						g_game().playerInviteToParty(player->getID(), member->getID());
+					}
 					break;
 				}
 				case 4: {
