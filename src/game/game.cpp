@@ -4086,8 +4086,32 @@ void Game::playerEquipItem(uint32_t playerId, uint16_t itemId, bool hasTier /* =
 	}
 	ReturnValue ret = RETURNVALUE_NOERROR;
 
+	// Soul Eater: items taken off with an action bar button go back to the container they belong to (the container the
+	// new item came from, or the one the item was equipped from), instead of the main backpack.
+	const auto seOwnedContainer = [&player](const std::shared_ptr<Container> &container) -> std::shared_ptr<Container> {
+		if (!container || container->isRemoved() || container->getHoldingPlayer() != player) {
+			return nullptr;
+		}
+		return container;
+	};
+	const auto seMoveToContainer = [this, &player](const std::shared_ptr<Item> &movingItem, const std::shared_ptr<Container> &container) {
+		if (!movingItem || !container || !movingItem->getParent()) {
+			return false;
+		}
+		return internalMoveItem(movingItem->getParent(), container, INDEX_WHEREEVER, movingItem, movingItem->getItemCount(), nullptr) == RETURNVALUE_NOERROR;
+	};
+	const auto equipOrigin = equipItem && equipItem->getParent() ? seOwnedContainer(equipItem->getParent()->getContainer()) : nullptr;
+
 	if (slotItem && slotItem->getID() == it.id && (!hasTier || slotItem->getTier() == tier)) {
-		ret = internalCollectManagedItems(player, slotItem, getObjectCategory(slotItem), false);
+		// taking it off: back to the container it was equipped from, if we still know it
+		auto &origin = player->seEquipOrigin[slot];
+		const auto originContainer = origin.itemId == slotItem->getID() ? seOwnedContainer(origin.container.lock()) : nullptr;
+		origin = {};
+		if (originContainer && seMoveToContainer(slotItem, originContainer)) {
+			ret = RETURNVALUE_NOERROR;
+		} else {
+			ret = internalCollectManagedItems(player, slotItem, getObjectCategory(slotItem), false);
+		}
 	} else if (equipItem) {
 		// Shield slot item
 		const auto &rightItem = player->getInventoryItem(CONST_SLOT_RIGHT);
@@ -4110,13 +4134,15 @@ void Game::playerEquipItem(uint32_t playerId, uint16_t itemId, bool hasTier /* =
 				&& !rightItem->isQuiver()
 				&& (!leftItem || leftItem->getWeaponType() != WEAPON_DISTANCE)
 			) {
-				ret = internalCollectManagedItems(player, rightItem, getObjectCategory(rightItem), false);
+				if (!seMoveToContainer(rightItem, equipOrigin)) {
+					ret = internalCollectManagedItems(player, rightItem, getObjectCategory(rightItem), false);
+				}
 			}
 
 			// Check if trying to equip a quiver while another quiver is already equipped in the right slot
 			if (slot == CONST_SLOT_RIGHT && rightItem && rightItem->isQuiver() && it.isQuiver()) {
 				// Replace the existing quiver with the new one
-				ret = internalMoveItem(rightItem->getParent(), player, INDEX_WHEREEVER, rightItem, rightItem->getItemCount(), nullptr);
+				ret = seMoveToContainer(rightItem, equipOrigin) ? RETURNVALUE_NOERROR : internalMoveItem(rightItem->getParent(), player, INDEX_WHEREEVER, rightItem, rightItem->getItemCount(), nullptr);
 				if (ret != RETURNVALUE_NOERROR) {
 					player->sendCancelMessage(ret);
 					return;
@@ -4125,7 +4151,7 @@ void Game::playerEquipItem(uint32_t playerId, uint16_t itemId, bool hasTier /* =
 				// Check if trying to equip a shield while a two-handed weapon is equipped in the left slot
 				if (slot == CONST_SLOT_RIGHT && leftItem && leftItem->getSlotPosition() & SLOTP_TWO_HAND) {
 					// Unequip the two-handed weapon from the left slot
-					ret = internalMoveItem(leftItem->getParent(), player, INDEX_WHEREEVER, leftItem, leftItem->getItemCount(), nullptr);
+					ret = seMoveToContainer(leftItem, equipOrigin) ? RETURNVALUE_NOERROR : internalMoveItem(leftItem->getParent(), player, INDEX_WHEREEVER, leftItem, leftItem->getItemCount(), nullptr);
 					if (ret != RETURNVALUE_NOERROR) {
 						player->sendCancelMessage(ret);
 						return;
@@ -4133,15 +4159,29 @@ void Game::playerEquipItem(uint32_t playerId, uint16_t itemId, bool hasTier /* =
 				}
 			}
 
+			// Soul Eater: the item being replaced goes into the container the new item comes from. When that container is
+			// full, it goes the usual way first and is moved into that container once the new item has left it.
+			bool seMoveSwappedLater = false;
 			if (slotItem) {
-				ret = internalCollectManagedItems(player, slotItem, getObjectCategory(slotItem), false);
-				// If the item is not collected, move it to any available container slot
-				if (ret != RETURNVALUE_NOERROR) {
-					ret = internalMoveItem(slotItem->getParent(), player, INDEX_WHEREEVER, slotItem, slotItem->getItemCount(), nullptr);
+				if (seMoveToContainer(slotItem, equipOrigin)) {
+					ret = RETURNVALUE_NOERROR;
+				} else {
+					seMoveSwappedLater = equipOrigin != nullptr;
+					ret = internalCollectManagedItems(player, slotItem, getObjectCategory(slotItem), false);
+					// If the item is not collected, move it to any available container slot
+					if (ret != RETURNVALUE_NOERROR) {
+						ret = internalMoveItem(slotItem->getParent(), player, INDEX_WHEREEVER, slotItem, slotItem->getItemCount(), nullptr);
+					}
 				}
 			}
 
 			ret = internalMoveItem(equipItem->getParent(), player, slot, equipItem, equipItem->getItemCount(), nullptr);
+			if (ret == RETURNVALUE_NOERROR) {
+				player->seEquipOrigin[slot] = { equipOrigin, equipItem->getID() };
+				if (seMoveSwappedLater && slotItem && !slotItem->isRemoved() && slotItem->getHoldingPlayer() == player) {
+					seMoveToContainer(slotItem, equipOrigin);
+				}
+			}
 		}
 	}
 

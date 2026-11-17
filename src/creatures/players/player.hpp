@@ -1728,6 +1728,17 @@ private:
 	bool seElementArmed = false; // a natural spell of the stance element was cast: the next non-element spell is converted
 	bool seConvertThisCast = false;
 	bool seInCast = false; // true only while an instant spell is being cast (not for its delayed hits)
+
+public:
+	// Soul Eater: the container an item was equipped from with an action bar button, per slot, so taking it off
+	// with the button puts it back there (only while the same item id is still in that slot).
+	struct SeEquipOrigin {
+		std::weak_ptr<Container> container;
+		uint16_t itemId = 0;
+	};
+	std::array<SeEquipOrigin, CONST_SLOT_LAST + 1> seEquipOrigin {};
+
+private:
 	std::unordered_set<uint16_t> aimAtTargetSpellIds;
 
 	std::string name;
