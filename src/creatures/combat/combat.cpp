@@ -36,12 +36,14 @@
 namespace {
 	thread_local CombatType_t seFxElement = COMBAT_NONE;
 	thread_local bool seFxArea = false;
+	thread_local CombatType_t seFxSource = COMBAT_NONE; // the spell's own element before the conversion
 
 	struct SeStanceEffectScope {
 		CombatType_t prevElement;
 		bool prevArea;
+		CombatType_t prevSource;
 		SeStanceEffectScope(const std::shared_ptr<Creature> &caster, CombatType_t spellType, CombatOrigin origin, bool area) :
-			prevElement(seFxElement), prevArea(seFxArea) {
+			prevElement(seFxElement), prevArea(seFxArea), prevSource(seFxSource) {
 			if (!caster || origin != ORIGIN_SPELL) {
 				return;
 			}
@@ -69,10 +71,12 @@ namespace {
 			}
 			seFxElement = element;
 			seFxArea = area;
+			seFxSource = spellType;
 		}
 		~SeStanceEffectScope() {
 			seFxElement = prevElement;
 			seFxArea = prevArea;
+			seFxSource = prevSource;
 		}
 		SeStanceEffectScope(const SeStanceEffectScope &) = delete;
 		SeStanceEffectScope &operator=(const SeStanceEffectScope &) = delete;
@@ -81,6 +85,15 @@ namespace {
 	uint16_t seStanceMagicEffect(uint16_t effect) {
 		if (seFxElement == COMBAT_NONE || effect == CONST_ME_NONE) {
 			return effect;
+		}
+		// Soul Eater: a fire spell converted by Master of Thunder shows purple fire (388), by Master of Decay black fire (387)
+		if (seFxSource == COMBAT_FIREDAMAGE) {
+			if (seFxElement == COMBAT_ENERGYDAMAGE) {
+				return 388;
+			}
+			if (seFxElement == COMBAT_DEATHDAMAGE) {
+				return 387;
+			}
 		}
 		switch (seFxElement) {
 			case COMBAT_FIREDAMAGE:
