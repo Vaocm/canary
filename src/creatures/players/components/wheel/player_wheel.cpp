@@ -3150,29 +3150,31 @@ void PlayerWheel::checkGiftOfLife() {
 	sendGiftOfLifeCooldown();
 }
 
-int32_t PlayerWheel::checkBlessingGroveHealingByTarget(const std::shared_ptr<Creature> &target) const {
-	if (!target || target == m_player.getPlayer()) {
+double PlayerWheel::checkBlessingGroveHealingByTarget(const std::shared_ptr<Creature> &target) const {
+	// Vocation Adjustments 2026: 5/7.5/10% (target 30-60% HP) and 10/15/20% (below 30% HP).
+	// Also applies to self-healing.
+	if (!target || target->getMaxHealth() <= 0) {
 		return 0;
 	}
 
-	int32_t healingBonus = 0;
+	double healingBonus = 0;
 	const uint8_t stage = getStage(WheelStage_t::BLESSING_OF_THE_GROVE);
 	const int32_t healthPercent = std::round((static_cast<double>(target->getHealth()) * 100) / static_cast<double>(target->getMaxHealth()));
-	if (healthPercent <= 30) {
+	if (healthPercent < 30) {
 		if (stage >= 3) {
-			healingBonus = 24;
+			healingBonus = 20;
 		} else if (stage >= 2) {
-			healingBonus = 18;
+			healingBonus = 15;
 		} else if (stage >= 1) {
-			healingBonus = 12;
+			healingBonus = 10;
 		}
 	} else if (healthPercent <= 60) {
 		if (stage >= 3) {
-			healingBonus = 12;
+			healingBonus = 10;
 		} else if (stage >= 2) {
-			healingBonus = 9;
+			healingBonus = 7.5;
 		} else if (stage >= 1) {
-			healingBonus = 6;
+			healingBonus = 5;
 		}
 	}
 
