@@ -2842,16 +2842,23 @@ void ProtocolGame::sendTeamFinderList() {
 	msg.addByte(0x2D);
 	msg.addByte(0x00); // Bool value, with 'true' the player exceed packets for second.
 	const auto &teamFinder = g_game().getTeamFinderList();
-	msg.add<uint16_t>(teamFinder.size());
+	// count only teams whose leader is online, so the list size always matches the entries written
+	uint16_t listed = 0;
+	for (const auto &it : teamFinder) {
+		if (it.second && g_game().getPlayerByGUID(it.first)) {
+			++listed;
+		}
+	}
+	msg.add<uint16_t>(listed);
 	for (const auto &it : teamFinder) {
 		const auto &leader = g_game().getPlayerByGUID(it.first);
 		if (!leader) {
-			return;
+			continue;
 		}
 
 		const auto &teamAssemble = it.second;
 		if (!teamAssemble) {
-			return;
+			continue;
 		}
 
 		uint8_t status = 0;
@@ -2863,7 +2870,7 @@ void ProtocolGame::sendTeamFinderList() {
 		msg.addByte(teamAssemble->vocationIDs);
 		msg.add<uint16_t>(teamAssemble->teamSlots);
 		for (auto itt : teamAssemble->membersMap) {
-			std::shared_ptr<Player> member = g_game().getPlayerByGUID(it.first);
+			std::shared_ptr<Player> member = g_game().getPlayerByGUID(itt.first);
 			if (member) {
 				if (itt.first == player->getGUID()) {
 					status = itt.second;
@@ -2909,17 +2916,18 @@ void ProtocolGame::sendLeaderTeamFinder(bool reset) {
 	}
 
 	const auto &teamAssemble = g_game().getTeamFinder(player);
-	if (!teamAssemble) {
-		return;
-	}
-
 	NetworkMessage msg;
 	msg.addByte(0x2C);
-	msg.addByte(reset ? 1 : 0);
-	if (reset) {
-		g_game().removeTeamFinderListed(player->getGUID());
+	if (reset || !teamAssemble) {
+		// no team (or team removed): tell the client so it shows the "create team" form
+		msg.addByte(1);
+		if (reset && teamAssemble) {
+			g_game().removeTeamFinderListed(player->getGUID());
+		}
+		writeToOutputBuffer(msg);
 		return;
 	}
+	msg.addByte(0);
 
 	msg.add<uint16_t>(teamAssemble->minLevel);
 	msg.add<uint16_t>(teamAssemble->maxLevel);
@@ -2968,18 +2976,7 @@ void ProtocolGame::sendLeaderTeamFinder(bool reset) {
 	msg.addByte(leader->getVocation()->getClientId());
 	msg.addByte(3);
 
-	const auto countPos = msg.getBufferPosition();
-	uint8_t count = 0;
-
-	for (const auto &[memberGUID, memberStatus] : teamAssemble->membersMap) {
-		auto member = g_game().getPlayerByGUID(memberGUID);
-		if (!member) {
-			continue;
-		}
-
-		++count;
-	}
-
+	// membersSize (leader + online members) was already written above; members follow directly
 	for (const auto &[memberGUID, memberStatus] : teamAssemble->membersMap) {
 		auto member = g_game().getPlayerByGUID(memberGUID);
 		if (!member) {
@@ -2991,9 +2988,6 @@ void ProtocolGame::sendLeaderTeamFinder(bool reset) {
 		msg.addByte(member->getVocation()->getClientId());
 		msg.addByte(memberStatus);
 	}
-
-	msg.setBufferPosition(countPos);
-	msg.addByte(count);
 
 	writeToOutputBuffer(msg);
 }
@@ -3166,12 +3160,15 @@ void ProtocolGame::parseMemberFinderWindow(NetworkMessage &msg) {
 			return;
 		}
 
-		const auto &teamAssemble = g_game().getTeamFinder(player);
+		const auto &teamAssemble = g_game().getTeamFinder(leader);
 		if (!teamAssemble) {
 			return;
 		}
 
 		if (action == 1) {
+			if (leader->getGUID() == player->getGUID()) {
+				return;
+			}
 			leader->sendTextMessage(MESSAGE_STATUS, "There is a new request to join your team.");
 			[[maybe_unused]] auto [it_request, inserted_request] = teamAssemble->membersMap.insert({ player->getGUID(), 1 });
 		} else {
@@ -3182,6 +3179,7 @@ void ProtocolGame::parseMemberFinderWindow(NetworkMessage &msg) {
 				}
 			}
 		}
+		leader->sendLeaderTeamFinder(false);
 		player->sendTeamFinderList();
 	}
 }
