@@ -8327,6 +8327,11 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 		thread_local int seRerunKind = 0;
 		const int seRerun = seRerunKind;
 		seRerunKind = 0;
+		// Soul Eater: also remember the hit's real origin, so the damage modifiers below (buffs, Shield Slam, Protector,
+		// Blood Rage, Sap Strength, Combat Mastery, ...) still apply to targets that have healthchange scripts (every player)
+		thread_local CombatOrigin seRerunOrigin = ORIGIN_NONE;
+		const CombatOrigin seSavedOrigin = seRerunOrigin;
+		seRerunOrigin = ORIGIN_NONE;
 		bool seForcedCritical = (seRerun == 2);
 		bool seSpellHit = (seRerun != 0);
 		if (damage.origin == static_cast<CombatOrigin>(SE_FORCED_CRITICAL_ORIGIN)) {
@@ -8352,10 +8357,14 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 					creatureEvent->executeHealthChange(target, attacker, damage);
 				}
 				seRerunKind = seForcedCritical ? 2 : (seSpellHit ? 1 : 0);
+				seRerunOrigin = damage.origin;
 				damage.origin = ORIGIN_NONE;
 				return combatChangeHealth(attacker, target, damage);
 			}
 		}
+
+		// the hit's real origin (damage.origin is ORIGIN_NONE when this is the re-run after healthchange scripts)
+		const CombatOrigin seRealOrigin = damage.origin != ORIGIN_NONE ? damage.origin : seSavedOrigin;
 
 		// Wheel of destiny apply combat effects
 		applyWheelOfDestinyEffectsToDamage(damage, attackerPlayer, target);
@@ -8377,7 +8386,7 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 			attackerMonster = nullptr;
 		}
 
-		if (attacker && attackerPlayer && damage.extension == false && damage.origin == ORIGIN_RANGED && target == attackerPlayer->getAttackedCreature()) {
+		if (attacker && attackerPlayer && damage.extension == false && seRealOrigin == ORIGIN_RANGED && target == attackerPlayer->getAttackedCreature()) {
 			const Position &attackerPos = attacker->getPosition();
 			if (targetPos.z == attackerPos.z) {
 				int32_t distanceX = Position::getDistanceX(targetPos, attackerPos);
@@ -8416,18 +8425,18 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 			g_events().eventCreatureOnDrainHealth(target, attacker, damage.primary.type, damage.primary.value, damage.secondary.type, damage.secondary.value, message.primary.color, message.secondary.color);
 			g_callbacks().executeCallback(EventCallback_t::creatureOnDrainHealth, target, attacker, std::ref(damage.primary.type), std::ref(damage.primary.value), std::ref(damage.secondary.type), std::ref(damage.secondary.value), std::ref(message.primary.color), std::ref(message.secondary.color));
 		}
-		if (damage.origin != ORIGIN_NONE && attacker && damage.primary.type != COMBAT_HEALING) {
+		if (seRealOrigin != ORIGIN_NONE && attacker && damage.primary.type != COMBAT_HEALING) {
 			damage.primary.value *= attacker->getBuff(BUFF_DAMAGEDEALT) / 100.;
 			damage.secondary.value *= attacker->getBuff(BUFF_DAMAGEDEALT) / 100.;
 		}
-		if (damage.origin != ORIGIN_NONE && target && damage.primary.type != COMBAT_HEALING) {
+		if (seRealOrigin != ORIGIN_NONE && target && damage.primary.type != COMBAT_HEALING) {
 			damage.primary.value *= target->getBuff(BUFF_DAMAGERECEIVED) / 100.;
 			damage.secondary.value *= target->getBuff(BUFF_DAMAGERECEIVED) / 100.;
 		}
 		// Soul Eater (Vocation Adjustments 2026): Combat Mastery (Knight). Deal +1% damage per 12/10/8% of the target's missing
 		// health (doubled with a two-handed weapon); take -1% damage per 12/10/8% of your own missing health (doubled with a
 		// shield, at most 50%). 12/10/8 = stage 1/2/3.
-		if (damage.origin != ORIGIN_NONE && damage.primary.type != COMBAT_HEALING) {
+		if (seRealOrigin != ORIGIN_NONE && damage.primary.type != COMBAT_HEALING) {
 			if (attackerPlayer && target && target->getMaxHealth() > 0) {
 				const uint8_t stage = attackerPlayer->wheel().getStage(WheelStage_t::COMBAT_MASTERY);
 				if (stage > 0) {
@@ -8462,7 +8471,7 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 			}
 		}
 		// Soul Eater: stance spells (Vocation Adjustments 2026)
-		if (damage.origin != ORIGIN_NONE && damage.origin != ORIGIN_CONDITION && damage.primary.type != COMBAT_HEALING) {
+		if (seRealOrigin != ORIGIN_NONE && seRealOrigin != ORIGIN_CONDITION && damage.primary.type != COMBAT_HEALING) {
 			const int64_t seNow = OTSYS_TIME();
 			double seMultiplier = 1.0;
 			if (attackerPlayer && attackerPlayer->hasSeStance(SeStance::Protector)) {
@@ -8503,7 +8512,7 @@ bool Game::combatChangeHealth(const std::shared_ptr<Creature> &attacker, const s
 			}
 
 			// Aura of Sapped Strength / Exposed Weakness: spells, runes and auto attacks mark the target for 10 seconds
-			if (attackerPlayer && target != attacker && (damage.origin == ORIGIN_SPELL || damage.origin == ORIGIN_MELEE || damage.origin == ORIGIN_RANGED || damage.origin == ORIGIN_FIST)) {
+			if (attackerPlayer && target != attacker && (seRealOrigin == ORIGIN_SPELL || seRealOrigin == ORIGIN_MELEE || seRealOrigin == ORIGIN_RANGED || seRealOrigin == ORIGIN_FIST)) {
 				if (attackerPlayer->getSeStance(1) == SeStance::SappedStrength) {
 					target->seSapUntil = seNow + 10000;
 				} else if (attackerPlayer->getSeStance(1) == SeStance::ExposedWeakness) {
