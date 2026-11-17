@@ -837,6 +837,10 @@ void Spell::applyCooldownConditions(const std::shared_ptr<Player> &player) const
 		if (isUpgraded) {
 			spellGroupCooldown -= getWheelOfDestinyBoost(WheelSpellBoost_t::GROUP_COOLDOWN, spellGrade);
 		}
+		// Soul Eater (Vocation Adjustments 2026): Focus Mastery also reduces the primary cooldown of focus spells by 2 seconds.
+		if (secondaryGroup == SPELLGROUP_FOCUS && player->wheel().getInstant("Focus Mastery")) {
+			spellGroupCooldown -= 2000;
+		}
 		if (spellGroupCooldown > 0) {
 			const auto &condition = Condition::createCondition(CONDITIONID_DEFAULT, CONDITION_SPELLGROUPCOOLDOWN, spellGroupCooldown / rateCooldown, 0, false, group);
 			player->addCondition(condition);

@@ -13023,18 +13023,26 @@ void Player::seStanceSpellAdjust(CombatDamage &damage, uint16_t &critChance, int
 	if (damage.primary.type == element) {
 		// natural damage of the stance element: gets the stance bonus and arms the conversion of the next non-element spell
 		seElementArmed = true;
+		// Soul Eater (Vocation Adjustments 2026): Wheel of Destiny "Lord of Destruction" (replaces Drain Body, uses its stage 0-3)
+		// adds +2/3/4% base power (Flames), +2/3/4% critical hit chance (Thunder) or +15/22.5/30% critical extra damage (Decay).
+		static constexpr double lordFlames[4] = { 0.0, 0.02, 0.03, 0.04 };
+		static constexpr int32_t lordThunder[4] = { 0, 200, 300, 400 };
+		static constexpr int32_t lordDecay[4] = { 0, 1500, 2250, 3000 };
+		const uint8_t lordStage = std::min<uint8_t>(3, wheel().getStage(WheelStage_t::DRAIN_BODY));
 		switch (seStance[0]) {
-			case SeStance::MasterFlames:
-				damage.primary.value = static_cast<int32_t>(std::lround(damage.primary.value * 1.04));
+			case SeStance::MasterFlames: {
+				const double flamesMultiplier = 1.04 + lordFlames[lordStage];
+				damage.primary.value = static_cast<int32_t>(std::lround(damage.primary.value * flamesMultiplier));
 				if (damage.secondary.type == element) {
-					damage.secondary.value = static_cast<int32_t>(std::lround(damage.secondary.value * 1.04));
+					damage.secondary.value = static_cast<int32_t>(std::lround(damage.secondary.value * flamesMultiplier));
 				}
 				break;
+			}
 			case SeStance::MasterThunder:
-				critChance = static_cast<uint16_t>(std::min<int32_t>(10000, critChance + 400));
+				critChance = static_cast<uint16_t>(std::min<int32_t>(10000, critChance + 400 + lordThunder[lordStage]));
 				break;
 			case SeStance::MasterDecay:
-				critBonus += 3000;
+				critBonus += 3000 + lordDecay[lordStage];
 				break;
 			default:
 				break;

@@ -3237,36 +3237,9 @@ int32_t PlayerWheel::checkBeamMasteryDamage() const {
 	return damageBoost;
 }
 
-int32_t PlayerWheel::checkDrainBodyLeech(const std::shared_ptr<Creature> &target, skills_t skill) const {
-	if (!target || !target->getMonster() || target->getWheelOfDestinyDrainBodyDebuff() == 0) {
-		return 0;
-	}
-
-	const uint8_t stage = target->getWheelOfDestinyDrainBodyDebuff();
-	if (target->getBuff(BUFF_DAMAGERECEIVED) > 100 && skill == SKILL_MANA_LEECH_AMOUNT) {
-		int32_t manaLeechSkill = 0;
-		if (stage >= 3) {
-			manaLeechSkill = 400;
-		} else if (stage >= 2) {
-			manaLeechSkill = 300;
-		} else if (stage >= 1) {
-			manaLeechSkill = 200;
-		}
-		return manaLeechSkill;
-	}
-
-	if (target->getBuff(BUFF_DAMAGEDEALT) < 100 && skill == SKILL_LIFE_LEECH_AMOUNT) {
-		int32_t lifeLeechSkill = 0;
-		if (stage >= 3) {
-			lifeLeechSkill = 500;
-		} else if (stage >= 2) {
-			lifeLeechSkill = 400;
-		} else if (stage >= 1) {
-			lifeLeechSkill = 300;
-		}
-		return lifeLeechSkill;
-	}
-
+int32_t PlayerWheel::checkDrainBodyLeech(const std::shared_ptr<Creature> &, skills_t) const {
+	// Soul Eater (Vocation Adjustments 2026): Drain Body was replaced by Lord of Destruction (its stage now
+	// boosts the Master stances, see Player::seStanceSpellAdjust), so the old life/mana leech is no longer given.
 	return 0;
 }
 

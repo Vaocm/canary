@@ -37,6 +37,13 @@ namespace InternalPlayerWheel {
 		"Wrath of Nature"
 	};
 
+	// Soul Eater (Vocation Adjustments 2026): the Sorcerer "special spells" augment (replaces Augmented Sap Strength).
+	std::vector<std::string> m_specialSpells {
+		"Lightning",
+		"Strong Energy Strike",
+		"Strong Flame Strike"
+	};
+
 	/**
 	 * @brief Registers spell data in the Wheel of Destiny for a given spell name and grade type.
 	 *
@@ -55,6 +62,12 @@ namespace InternalPlayerWheel {
 			for (const std::string &focusSpellName : m_focusSpells) {
 				g_logger().trace("[{}] registered any spell: {}", __FUNCTION__, focusSpellName);
 				registerWheelSpellTable(spellData, focusSpellName, gradeType);
+			}
+			return;
+		}
+		if (name == "Any_Special_Mage_Spell") {
+			for (const std::string &specialSpellName : m_specialSpells) {
+				registerWheelSpellTable(spellData, specialSpellName, gradeType);
 			}
 			return;
 		}
@@ -307,12 +320,16 @@ void IOWheel::initializePaladinSpells() {
 }
 
 void IOWheel::initializeSorcererSpells() {
-	m_wheelBonusData.spells.sorcerer[0].name = "Magic Shield";
-	m_wheelBonusData.spells.sorcerer[0].grade[2].decrease.cooldown = 6;
+	// Soul Eater (Vocation Adjustments 2026): Augmented Magic Shield -> Augmented Death Echo.
+	// I: +5% base damage, II: the second blast comes after 1 second instead of 2. Both are applied
+	// in death_echo.lua (it reads the grade with upgradeSpellsWOD), because the spell hits around its target.
+	m_wheelBonusData.spells.sorcerer[0].name = "Death Echo";
 
-	m_wheelBonusData.spells.sorcerer[1].name = "Sap Strength";
-	m_wheelBonusData.spells.sorcerer[1].grade[1].increase.area = true;
-	m_wheelBonusData.spells.sorcerer[1].grade[2].increase.damageReduction = 1;
+	// Soul Eater (Vocation Adjustments 2026): Augmented Sap Strength -> Augmented Special Spells
+	// (Lightning, Strong Energy Strike, Strong Flame Strike). I: -4s cooldown, II: +50% base damage.
+	m_wheelBonusData.spells.sorcerer[1].name = "Any_Special_Mage_Spell";
+	m_wheelBonusData.spells.sorcerer[1].grade[1].decrease.cooldown = 4;
+	m_wheelBonusData.spells.sorcerer[1].grade[2].increase.damage = 50;
 
 	m_wheelBonusData.spells.sorcerer[2].name = "Energy Wave";
 	m_wheelBonusData.spells.sorcerer[2].grade[1].increase.area = true;
@@ -612,7 +629,7 @@ void IOWheel::slotGreenMiddle100(const std::shared_ptr<Player> &player, uint16_t
 		bonusData.stats.health += 2 * points;
 	} else {
 		if (isSorcerer(vocationCipId)) {
-			addSpell(player, bonusData, WheelSlots_t::SLOT_GREEN_MIDDLE_100, points, "Magic Shield");
+			addSpell(player, bonusData, WheelSlots_t::SLOT_GREEN_MIDDLE_100, points, "Death Echo");
 		} else {
 			addSpell(player, bonusData, WheelSlots_t::SLOT_GREEN_MIDDLE_100, points, "Mass Healing");
 		}
@@ -658,7 +675,9 @@ void IOWheel::slotRedMiddle100(const std::shared_ptr<Player> &player, uint16_t p
 		bonusData.stats.mana += 3 * points;
 	} else if (isSorcerer(vocationCipId) || isDruid(vocationCipId)) {
 		if (isSorcerer(vocationCipId)) {
-			addSpell(player, bonusData, WheelSlots_t::SLOT_RED_MIDDLE_100, points, "Sap Strength");
+			for (const std::string &specialSpellName : InternalPlayerWheel::m_specialSpells) {
+				addSpell(player, bonusData, WheelSlots_t::SLOT_RED_MIDDLE_100, points, specialSpellName);
+			}
 		} else {
 			addSpell(player, bonusData, WheelSlots_t::SLOT_RED_MIDDLE_100, points, "Nature's Embrace");
 		}
@@ -879,7 +898,7 @@ void IOWheel::slotPurpleTop100(const std::shared_ptr<Player> &player, uint16_t p
 		bonusData.stats.capacity += 4 * points;
 	} else {
 		if (isSorcerer(vocationCipId)) {
-			addSpell(player, bonusData, WheelSlots_t::SLOT_PURPLE_TOP_100, points, "Magic Shield");
+			addSpell(player, bonusData, WheelSlots_t::SLOT_PURPLE_TOP_100, points, "Death Echo");
 		} else {
 			addSpell(player, bonusData, WheelSlots_t::SLOT_PURPLE_TOP_100, points, "Mass Healing");
 		}
@@ -910,7 +929,9 @@ void IOWheel::slotBlueMiddle100(const std::shared_ptr<Player> &player, uint16_t 
 		addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_MIDDLE_100, points, "Divine Dazzle");
 	} else if (isSorcerer(vocationCipId) || isDruid(vocationCipId)) {
 		if (isSorcerer(vocationCipId)) {
-			addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_MIDDLE_100, points, "Sap Strength");
+			for (const std::string &specialSpellName : InternalPlayerWheel::m_specialSpells) {
+				addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_MIDDLE_100, points, specialSpellName);
+			}
 		} else {
 			addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_MIDDLE_100, points, "Nature's Embrace");
 		}
