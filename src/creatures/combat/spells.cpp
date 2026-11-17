@@ -1269,6 +1269,7 @@ bool InstantSpell::playerCastInstant(const std::shared_ptr<Player> &player, std:
 
 	player->seNewSpellCast();
 	bool result = executeCastSpell(player, var);
+	player->seEndSpellCast();
 	if (result) {
 		postCastSpell(player);
 	}

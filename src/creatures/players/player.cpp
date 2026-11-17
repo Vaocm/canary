@@ -13022,8 +13022,13 @@ void Player::seStanceSpellAdjust(CombatDamage &damage, uint16_t &critChance, int
 			return;
 	}
 
+	// Soul Eater: a hit that lands after its cast is over (a delayed wave or an echo, e.g. Death Echo, Hell's Core,
+	// Rage of the Skies) keeps its own element and gets the bonus, but never arms or uses up a conversion.
+	// Before this, such a late hit re-armed the stance, so the next spell was converted without casting the element again.
+	const bool inCast = seInCast;
+
 	// first damage of a new spell cast: the conversion armed by an earlier cast is used up by this cast
-	if (seSeenCastId != seCastId) {
+	if (inCast && seSeenCastId != seCastId) {
 		seSeenCastId = seCastId;
 		seConvertThisCast = seElementArmed;
 		seElementArmed = false;
@@ -13035,7 +13040,9 @@ void Player::seStanceSpellAdjust(CombatDamage &damage, uint16_t &critChance, int
 
 	if (damage.primary.type == element) {
 		// natural damage of the stance element: gets the stance bonus and arms the conversion of the next non-element spell
-		seElementArmed = true;
+		if (inCast) {
+			seElementArmed = true;
+		}
 		// Soul Eater (Vocation Adjustments 2026): Wheel of Destiny "Lord of Destruction" (replaces Drain Body, uses its stage 0-3)
 		// adds +2/3/4% base power (Flames), +2/3/4% critical hit chance (Thunder) or +15/22.5/30% critical extra damage (Decay).
 		static constexpr double lordFlames[4] = { 0.0, 0.02, 0.03, 0.04 };
@@ -13060,7 +13067,7 @@ void Player::seStanceSpellAdjust(CombatDamage &damage, uint16_t &critChance, int
 			default:
 				break;
 		}
-	} else if (seConvertThisCast && isConvertible(damage.primary.type)) {
+	} else if (inCast && seConvertThisCast && isConvertible(damage.primary.type)) {
 		// Soul Eater (wiki): whenever a spell of the stance element is cast, the next non-element spell becomes that element
 		damage.primary.type = element;
 		if (isConvertible(damage.secondary.type)) {

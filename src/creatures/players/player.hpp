@@ -214,6 +214,11 @@ public:
 	}
 	void seNewSpellCast() {
 		++seCastId;
+		seInCast = true;
+	}
+	// Soul Eater: the cast is over; hits that land later (delayed waves, echoes) must not arm or use a stance conversion
+	void seEndSpellCast() {
+		seInCast = false;
 	}
 	// runes are not affected by the Sorcerer Master stances (spells only)
 	void setSeRuneCasting(bool value) {
@@ -224,6 +229,9 @@ public:
 	}
 	// true when the spell being cast right now is converted to the Master stance element (decided on its first damage)
 	bool seCastConverts() const {
+		if (!seInCast) {
+			return false;
+		}
 		return seSeenCastId != seCastId ? seElementArmed : seConvertThisCast;
 	}
 	// called for every damaging spell before critical hits are rolled (Sorcerer elemental stances)
@@ -1719,6 +1727,7 @@ private:
 	uint32_t seSeenCastId = 0;
 	bool seElementArmed = false; // a natural spell of the stance element was cast: the next non-element spell is converted
 	bool seConvertThisCast = false;
+	bool seInCast = false; // true only while an instant spell is being cast (not for its delayed hits)
 	std::unordered_set<uint16_t> aimAtTargetSpellIds;
 
 	std::string name;
