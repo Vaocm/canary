@@ -8118,8 +8118,10 @@ void Game::applyWheelOfDestinyHealing(CombatDamage &damage, const std::shared_pt
 			// (no origin check: health-change scripts reset damage.origin to ORIGIN_NONE before healing bonuses are applied;
 			// the spell name is only set by a real cast)
 			if (damage.instantSpellName == "Heal Friend" || damage.instantSpellName == "Nature's Embrace") {
-				const int32_t critChance = attackerPlayer->getSkillLevel(SKILL_CRITICAL_HIT_CHANCE);
-				const int32_t critExtra = attackerPlayer->getSkillLevel(SKILL_CRITICAL_HIT_DAMAGE);
+				// same total as the Cyclopedia shows: gear/imbuements/proficiency + base critical + Wheel critical
+				const auto &seBaseCrit = attackerPlayer->getBaseCritical();
+				const int32_t critChance = std::min<int32_t>(10000, attackerPlayer->getSkillLevel(SKILL_CRITICAL_HIT_CHANCE) + static_cast<int32_t>(seBaseCrit.chance * 10000) + attackerPlayer->wheel().getStat(WheelStat_t::CRITICAL_CHANCE));
+				const int32_t critExtra = attackerPlayer->getSkillLevel(SKILL_CRITICAL_HIT_DAMAGE) + static_cast<int32_t>(seBaseCrit.damage * 10000);
 				if (critChance > 0 && uniform_random(1, 10000) <= critChance) {
 					const double critMultiplier = 1.0 + static_cast<double>(critExtra) / 10000.0;
 					damage.primary.value = static_cast<int32_t>(damage.primary.value * critMultiplier);
