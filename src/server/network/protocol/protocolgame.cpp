@@ -3132,23 +3132,32 @@ void ProtocolGame::parseLeaderFinderWindow(NetworkMessage &msg) {
 					break;
 				}
 				case 3: {
-					member->sendTextMessage(MESSAGE_STATUS, "Your team finder request was accepted.");
 					// like the official client: accepting someone adds them to the leader's party
 					if (member->getParty() && member->getParty() == player->getParty()) {
 						break;
 					}
 					if (member->getParty()) {
 						player->sendTextMessage(MESSAGE_STATUS, fmt::format("{} is already in another party.", member->getName()));
-						member->sendTextMessage(MESSAGE_STATUS, fmt::format("{} accepted you into the team. Leave your current party to join theirs.", player->getName()));
+						member->sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("{} accepted you into the team. Leave your current party to join theirs.", player->getName()));
 						break;
 					}
 					g_game().playerInviteToParty(player->getID(), member->getID());
 					g_game().playerJoinParty(member->getID(), player->getID());
 					if (member->getParty() && member->getParty() == player->getParty()) {
-						player->sendTextMessage(MESSAGE_STATUS, fmt::format("{} joined your party.", member->getName()));
-						member->sendTextMessage(MESSAGE_STATUS, fmt::format("You joined {}'s party.", player->getName()));
+						// Soul Eater: everyone in the team sees on screen who joined
+						const auto &party = player->getParty();
+						const auto text = fmt::format("{} joined the team.", member->getName());
+						if (const auto &partyLeader = party->getLeader(); partyLeader && partyLeader != member) {
+							partyLeader->sendTextMessage(MESSAGE_EVENT_ADVANCE, text);
+						}
+						for (const auto &partyMember : party->getMembers()) {
+							if (partyMember && partyMember != member) {
+								partyMember->sendTextMessage(MESSAGE_EVENT_ADVANCE, text);
+							}
+						}
+						member->sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("You joined {}'s team.", player->getName()));
 					} else {
-						member->sendTextMessage(MESSAGE_STATUS, fmt::format("{} invited you to the party.", player->getName()));
+						member->sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("{} accepted your request and invited you to the party.", player->getName()));
 					}
 					break;
 				}
@@ -3167,7 +3176,7 @@ void ProtocolGame::parseLeaderFinderWindow(NetworkMessage &msg) {
 					} else {
 						// rejected applicants disappear from the list; they can apply again later
 						teamAssemble->membersMap.erase(member->getGUID());
-						member->sendTextMessage(MESSAGE_STATUS, "Your team finder request was denied.");
+						member->sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("{} rejected your request to join the team.", player->getName()));
 					}
 					break;
 				}
@@ -3254,8 +3263,12 @@ void ProtocolGame::parseMemberFinderWindow(NetworkMessage &msg) {
 				player->sendTeamFinderList();
 				return;
 			}
-			leader->sendTextMessage(MESSAGE_STATUS, "There is a new request to join your team.");
 			[[maybe_unused]] auto [it_request, inserted_request] = teamAssemble->membersMap.insert({ player->getGUID(), 1 });
+			if (inserted_request) {
+				// Soul Eater: the leader sees on screen who applied
+				leader->sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("{} (level {}, {}) applied to join your team.", player->getName(), level, player->getVocation()->getVocName()));
+				player->sendTextMessage(MESSAGE_STATUS, fmt::format("Your request to join {}'s team was sent.", leader->getName()));
+			}
 		} else {
 			for (auto itt = teamAssemble->membersMap.begin(), end = teamAssemble->membersMap.end(); itt != end; ++itt) {
 				if (itt->first == player->getGUID()) {
