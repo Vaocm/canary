@@ -10,6 +10,7 @@
 #include "lua/functions/creatures/player/party_functions.hpp"
 
 #include "creatures/players/grouping/party.hpp"
+#include "creatures/players/grouping/team_finder.hpp"
 #include "creatures/players/player.hpp"
 #include "game/game.hpp"
 #include "lua/functions/lua_functions_loader.hpp"
@@ -25,6 +26,7 @@ void PartyFunctions::init(lua_State* L) {
 	Lua::registerMethod(L, "Party", "getInvitees", PartyFunctions::luaPartyGetInvitees);
 	Lua::registerMethod(L, "Party", "getInviteeCount", PartyFunctions::luaPartyGetInviteeCount);
 	Lua::registerMethod(L, "Party", "getUniqueVocationsCount", PartyFunctions::luaPartyGetUniqueVocationsCount);
+	Lua::registerMethod(L, "Party", "getTeamFinderCount", PartyFunctions::luaPartyGetTeamFinderCount);
 	Lua::registerMethod(L, "Party", "addInvite", PartyFunctions::luaPartyAddInvite);
 	Lua::registerMethod(L, "Party", "removeInvite", PartyFunctions::luaPartyRemoveInvite);
 	Lua::registerMethod(L, "Party", "addMember", PartyFunctions::luaPartyAddMember);
@@ -168,6 +170,39 @@ int PartyFunctions::luaPartyGetInviteeCount(lua_State* L) {
 	} else {
 		lua_pushnil(L);
 	}
+	return 1;
+}
+
+int PartyFunctions::luaPartyGetTeamFinderCount(lua_State* L) {
+	// party:getTeamFinderCount()
+	// Soul Eater: how many players of this party joined through the leader's Team Finder board team
+	// (the leader counts as one). 0 when the leader has no board team.
+	const auto &party = Lua::getUserdataShared<Party>(L, 1, "Party");
+	if (!party) {
+		lua_pushnil(L);
+		return 1;
+	}
+	const auto &leader = party->getLeader();
+	if (!leader) {
+		lua_pushnumber(L, 0);
+		return 1;
+	}
+	const auto &team = g_game().getTeamFinder(leader);
+	if (!team) {
+		lua_pushnumber(L, 0);
+		return 1;
+	}
+	uint32_t count = 1; // the leader
+	for (const auto &member : party->getMembers()) {
+		if (!member) {
+			continue;
+		}
+		const auto it = team->membersMap.find(member->getGUID());
+		if (it != team->membersMap.end() && it->second == 3) {
+			++count;
+		}
+	}
+	lua_pushnumber(L, count);
 	return 1;
 }
 
