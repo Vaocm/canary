@@ -3151,7 +3151,15 @@ void ProtocolGame::parseLeaderFinderWindow(NetworkMessage &msg) {
 					break;
 				}
 				case 4: {
-					member->sendTextMessage(MESSAGE_STATUS, "Your team finder request was denied.");
+					// "Remove" on an accepted member also takes them out of the leader's party
+					const auto &leaderParty = player->getParty();
+					if (leaderParty && member->getParty() == leaderParty && member != player) {
+						leaderParty->leaveParty(member, true);
+						member->sendTextMessage(MESSAGE_STATUS, fmt::format("You were removed from {}'s team and party.", player->getName()));
+						player->sendTextMessage(MESSAGE_STATUS, fmt::format("{} was removed from your team and party.", member->getName()));
+					} else {
+						member->sendTextMessage(MESSAGE_STATUS, "Your team finder request was denied.");
+					}
 					break;
 				}
 
