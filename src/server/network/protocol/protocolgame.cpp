@@ -3222,6 +3222,12 @@ void ProtocolGame::parseMemberFinderWindow(NetworkMessage &msg) {
 				player->sendTeamFinderList();
 				return;
 			}
+			const auto level = player->getLevel();
+			if ((teamAssemble->minLevel > 0 && level < teamAssemble->minLevel) || (teamAssemble->maxLevel > 0 && level > teamAssemble->maxLevel)) {
+				player->sendTextMessage(MESSAGE_STATUS, fmt::format("This team is looking for level {} to {}.", teamAssemble->minLevel, teamAssemble->maxLevel));
+				player->sendTeamFinderList();
+				return;
+			}
 			leader->sendTextMessage(MESSAGE_STATUS, "There is a new request to join your team.");
 			[[maybe_unused]] auto [it_request, inserted_request] = teamAssemble->membersMap.insert({ player->getGUID(), 1 });
 		} else {
