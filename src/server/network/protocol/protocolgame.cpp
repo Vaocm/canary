@@ -3162,6 +3162,13 @@ void ProtocolGame::parseLeaderFinderWindow(NetworkMessage &msg) {
 			break;
 		}
 		case 3: {
+			// a party member (not the party leader) can't assemble a team of their own
+			const auto &party = player->getParty();
+			if (party && party->getLeader() != player) {
+				player->sendTextMessage(MESSAGE_STATUS, "You are a member of a party. Only the party leader can assemble a team.");
+				player->sendLeaderTeamFinder(false);
+				break;
+			}
 			player->createLeaderTeamFinder(msg);
 			player->sendLeaderTeamFinder(false);
 			break;
