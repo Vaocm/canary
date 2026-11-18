@@ -8,6 +8,7 @@
  */
 
 #include "creatures/players/grouping/party.hpp"
+#include "creatures/players/grouping/team_finder.hpp"
 
 #include "config/configmanager.hpp"
 #include "creatures/creature.hpp"
@@ -217,6 +218,19 @@ bool Party::leaveParty(const std::shared_ptr<Player> &player, bool forceRemove /
 	const bool removedMember = std::erase(memberList, player) > 0;
 	if (!removedMember && leader != player) {
 		return false;
+	}
+
+	// Soul Eater: a member who leaves the party is also taken off the leader's Team Finder team, so a normal invite
+	// back does not count for the board bonus; they have to apply through the board again
+	if (leader != player) {
+		if (const auto &team = g_game().getTeamFinder(leader)) {
+			const auto it = team->membersMap.find(player->getGUID());
+			if (it != team->membersMap.end() && it->second == 3) {
+				team->membersMap.erase(it);
+				player->sendTextMessage(MESSAGE_STATUS, fmt::format("You left the party, so you are no longer in {}'s board team.", leader->getName()));
+				leader->sendLeaderTeamFinder(false);
+			}
+		}
 	}
 
 	player->setParty(nullptr);
