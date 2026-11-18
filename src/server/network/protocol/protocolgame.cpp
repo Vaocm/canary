@@ -3165,6 +3165,8 @@ void ProtocolGame::parseLeaderFinderWindow(NetworkMessage &msg) {
 						teamAssemble->membersMap.erase(member->getGUID());
 						member->sendTextMessage(MESSAGE_STATUS, fmt::format("You were removed from {}'s team.", player->getName()));
 					} else {
+						// rejected applicants disappear from the list; they can apply again later
+						teamAssemble->membersMap.erase(member->getGUID());
 						member->sendTextMessage(MESSAGE_STATUS, "Your team finder request was denied.");
 					}
 					break;
