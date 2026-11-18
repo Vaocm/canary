@@ -3228,6 +3228,12 @@ void ProtocolGame::parseMemberFinderWindow(NetworkMessage &msg) {
 			if (leader->getGUID() == player->getGUID()) {
 				return;
 			}
+			// Soul Eater: an accepted member who is already in the team's party can't apply again
+			if (const auto it = teamAssemble->membersMap.find(player->getGUID()); it != teamAssemble->membersMap.end() && it->second == 3) {
+				player->sendTextMessage(MESSAGE_STATUS, "You are already a member of this team.");
+				player->sendTeamFinderList();
+				return;
+			}
 			uint8_t vocationBit = 0;
 			switch (player->getVocation()->getFromVocation()) {
 				case 4:
@@ -3269,11 +3275,16 @@ void ProtocolGame::parseMemberFinderWindow(NetworkMessage &msg) {
 				player->sendTextMessage(MESSAGE_STATUS, fmt::format("Your request to join {}'s team was sent.", leader->getName()));
 			}
 		} else {
-			for (auto itt = teamAssemble->membersMap.begin(), end = teamAssemble->membersMap.end(); itt != end; ++itt) {
-				if (itt->first == player->getGUID()) {
-					[[maybe_unused]] auto it = teamAssemble->membersMap.erase(itt);
-					break;
-				}
+			// Soul Eater: withdrawing after being accepted also leaves the team's party
+			// (leaveParty removes the board entry and tells the player); otherwise just drop the request
+			const auto it = teamAssemble->membersMap.find(player->getGUID());
+			const bool wasMember = it != teamAssemble->membersMap.end() && it->second == 3;
+			const auto &party = player->getParty();
+			if (wasMember && party && party == leader->getParty()) {
+				party->leaveParty(player, true);
+				player->sendTextMessage(MESSAGE_EVENT_ADVANCE, fmt::format("You withdrew from {}'s team and left the party.", leader->getName()));
+			} else if (it != teamAssemble->membersMap.end()) {
+				teamAssemble->membersMap.erase(it);
 			}
 		}
 		leader->sendLeaderTeamFinder(false);
