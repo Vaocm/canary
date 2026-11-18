@@ -2981,7 +2981,7 @@ void ProtocolGame::sendLeaderTeamFinder(bool reset) {
 	msg.add<uint32_t>(leader->getGUID());
 	msg.addString(leader->getName());
 	msg.add<uint16_t>(leader->getLevel());
-	msg.addByte(leader->getVocation()->getClientId());
+	msg.addByte(static_cast<uint8_t>(leader->getVocation()->getId()));
 	msg.addByte(3);
 
 	// membersSize (leader + online members) was already written above; members follow directly
@@ -2993,7 +2993,7 @@ void ProtocolGame::sendLeaderTeamFinder(bool reset) {
 		msg.add<uint32_t>(member->getGUID());
 		msg.addString(member->getName());
 		msg.add<uint16_t>(member->getLevel());
-		msg.addByte(member->getVocation()->getClientId());
+		msg.addByte(static_cast<uint8_t>(member->getVocation()->getId()));
 		msg.addByte(memberStatus);
 	}
 
@@ -3129,9 +3129,22 @@ void ProtocolGame::parseLeaderFinderWindow(NetworkMessage &msg) {
 				}
 				case 3: {
 					member->sendTextMessage(MESSAGE_STATUS, "Your team finder request was accepted.");
-					// like the official client: accepting someone invites them to the leader's party
-					if (!member->getParty() || member->getParty() != player->getParty()) {
-						g_game().playerInviteToParty(player->getID(), member->getID());
+					// like the official client: accepting someone adds them to the leader's party
+					if (member->getParty() && member->getParty() == player->getParty()) {
+						break;
+					}
+					if (member->getParty()) {
+						player->sendTextMessage(MESSAGE_STATUS, fmt::format("{} is already in another party.", member->getName()));
+						member->sendTextMessage(MESSAGE_STATUS, fmt::format("{} accepted you into the team. Leave your current party to join theirs.", player->getName()));
+						break;
+					}
+					g_game().playerInviteToParty(player->getID(), member->getID());
+					g_game().playerJoinParty(member->getID(), player->getID());
+					if (member->getParty() && member->getParty() == player->getParty()) {
+						player->sendTextMessage(MESSAGE_STATUS, fmt::format("{} joined your party.", member->getName()));
+						member->sendTextMessage(MESSAGE_STATUS, fmt::format("You joined {}'s party.", player->getName()));
+					} else {
+						member->sendTextMessage(MESSAGE_STATUS, fmt::format("{} invited you to the party.", player->getName()));
 					}
 					break;
 				}
@@ -3179,6 +3192,34 @@ void ProtocolGame::parseMemberFinderWindow(NetworkMessage &msg) {
 
 		if (action == 1) {
 			if (leader->getGUID() == player->getGUID()) {
+				return;
+			}
+			uint8_t vocationBit = 0;
+			switch (player->getVocation()->getFromVocation()) {
+				case 4:
+					vocationBit = 1;
+					break; // Knight
+				case 3:
+					vocationBit = 2;
+					break; // Paladin
+				case 1:
+					vocationBit = 4;
+					break; // Sorcerer
+				case 2:
+					vocationBit = 8;
+					break; // Druid
+				case 9:
+					vocationBit = 16;
+					break; // Monk
+				case 11:
+					vocationBit = 32;
+					break; // Assassin
+				default:
+					break;
+			}
+			if (teamAssemble->vocationIDs != 0 && vocationBit != 0 && (teamAssemble->vocationIDs & vocationBit) == 0) {
+				player->sendTextMessage(MESSAGE_STATUS, "This team is not looking for your vocation.");
+				player->sendTeamFinderList();
 				return;
 			}
 			leader->sendTextMessage(MESSAGE_STATUS, "There is a new request to join your team.");
