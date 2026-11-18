@@ -2889,7 +2889,9 @@ void ProtocolGame::sendTeamFinderList() {
 				}
 			}
 		}
-		msg.add<uint16_t>(std::max<uint16_t>((teamAssemble->teamSlots - teamAssemble->freeSlots), membersSize));
+		// filled = places the leader already had (team size - free slots) + everyone accepted since
+		const uint16_t baseFilled = teamAssemble->teamSlots > teamAssemble->freeSlots ? teamAssemble->teamSlots - teamAssemble->freeSlots : 1;
+		msg.add<uint16_t>(std::min<uint16_t>(teamAssemble->teamSlots, baseFilled + membersSize));
 		// The leader does not count on this math, he is included inside the 'freeSlots'.
 		msg.add<uint32_t>(teamAssemble->timestamp);
 		msg.addByte(teamAssemble->teamType);
