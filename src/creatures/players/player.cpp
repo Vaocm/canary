@@ -21,6 +21,7 @@
 #include "creatures/monsters/monsters.hpp"
 #include "creatures/npcs/npc.hpp"
 #include "creatures/players/grouping/party.hpp"
+#include "creatures/players/grouping/team_finder.hpp"
 #include "creatures/players/imbuements/imbuements.hpp"
 #include "creatures/players/storages/storages.hpp"
 #include "creatures/players/components/player_forge_history.hpp"
@@ -6997,12 +6998,51 @@ Skulls_t Player::getSkull() const {
 	return skull;
 }
 
+// Soul Eater: true while the player's party was built only through the leader's Team Finder board team
+// (every member accepted through the board, at least 2 players) - the same rule as the board team bonus
+static bool isInBoardTeam(const std::shared_ptr<Player> &player) {
+	const auto &party = player ? player->getParty() : nullptr;
+	if (!party) {
+		return false;
+	}
+	const auto &leader = party->getLeader();
+	if (!leader) {
+		return false;
+	}
+	const auto &team = g_game().getTeamFinder(leader);
+	if (!team) {
+		return false;
+	}
+	const auto members = party->getMembers();
+	if (members.empty()) {
+		return false;
+	}
+	for (const auto &member : members) {
+		if (!member) {
+			return false;
+		}
+		const auto it = team->membersMap.find(member->getGUID());
+		if (it == team->membersMap.end() || it->second != 3) {
+			return false;
+		}
+	}
+	return true;
+}
+
 Skulls_t Player::getSkullClient(const std::shared_ptr<Creature> &creature) {
-	if (!creature || g_game().getWorldType() != WORLD_TYPE_PVP) {
+	if (!creature) {
 		return SKULL_NONE;
 	}
 
 	const auto &player = creature->getPlayer();
+	if (g_game().getWorldType() != WORLD_TYPE_PVP) {
+		// the board team mark is shown on every world type
+		if (player && player->getSkull() == SKULL_NONE && isInBoardTeam(player)) {
+			return SKULL_BLUE;
+		}
+		return SKULL_NONE;
+	}
+
 	if (player && player->getSkull() == SKULL_NONE) {
 		if (player.get() == this) {
 			if (std::ranges::any_of(unjustifiedKills, [&](const auto &kill) {
@@ -7018,6 +7058,11 @@ Skulls_t Player::getSkullClient(const std::shared_ptr<Creature> &creature) {
 
 		if (player->hasAttacked(getPlayer())) {
 			return SKULL_YELLOW;
+		}
+
+		// Soul Eater: board team players show a blue skull to everyone (instead of the green party skull)
+		if (isInBoardTeam(player)) {
+			return SKULL_BLUE;
 		}
 
 		if (m_party && m_party == player->m_party) {

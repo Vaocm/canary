@@ -547,6 +547,7 @@ enum Skulls_t : uint8_t {
 	SKULL_RED = 4,
 	SKULL_BLACK = 5,
 	SKULL_ORANGE = 6,
+	SKULL_BLUE = 7, // Soul Eater: only shown, never stored - marks a Team Finder board team (client draws skull_blue)
 };
 
 enum PartyShields_t : uint8_t {
