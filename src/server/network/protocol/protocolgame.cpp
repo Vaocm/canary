@@ -3118,8 +3118,10 @@ void ProtocolGame::parseLeaderFinderWindow(NetworkMessage &msg) {
 			}
 
 			uint8_t memberStatus = msg.getByte();
+			uint8_t previousStatus = 0;
 			for (auto &[guid, status] : teamAssemble->membersMap) {
 				if (guid == memberID) {
+					previousStatus = status;
 					status = memberStatus;
 				}
 			}
@@ -3155,8 +3157,13 @@ void ProtocolGame::parseLeaderFinderWindow(NetworkMessage &msg) {
 					const auto &leaderParty = player->getParty();
 					if (leaderParty && member->getParty() == leaderParty && member != player) {
 						leaderParty->leaveParty(member, true);
+						// gone from the team list too: to come back they have to apply again
+						teamAssemble->membersMap.erase(member->getGUID());
 						member->sendTextMessage(MESSAGE_STATUS, fmt::format("You were removed from {}'s team and party.", player->getName()));
 						player->sendTextMessage(MESSAGE_STATUS, fmt::format("{} was removed from your team and party.", member->getName()));
+					} else if (previousStatus == 3) {
+						teamAssemble->membersMap.erase(member->getGUID());
+						member->sendTextMessage(MESSAGE_STATUS, fmt::format("You were removed from {}'s team.", player->getName()));
 					} else {
 						member->sendTextMessage(MESSAGE_STATUS, "Your team finder request was denied.");
 					}
