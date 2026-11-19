@@ -17,7 +17,7 @@
 class TeamFinder final {
 public:
 	TeamFinder() = default;
-	TeamFinder(uint16_t initMinLevel, uint16_t initMaxLevel, uint8_t initVocationIDs, uint16_t initTeamSlots, uint16_t initFreeSlots, bool initPartyBool, uint32_t initTimestamp, uint8_t initTeamType, uint16_t initBossID, uint16_t initHunt_type, uint16_t initHunt_area, uint16_t initQuestID, uint32_t initLeaderGuid, std::map<uint32_t, uint8_t> initMembersMap) :
+	TeamFinder(uint16_t initMinLevel, uint16_t initMaxLevel, uint8_t initVocationIDs, uint16_t initTeamSlots, uint16_t initFreeSlots, bool initPartyBool, uint32_t initTimestamp, uint8_t initTeamType, uint16_t initBossID, uint16_t initHunt_type, uint16_t initHunt_area, uint16_t initQuestID, uint32_t initLeaderGuid, std::map<uint32_t, uint8_t> initMembersMap, std::string initCustomText = {}) :
 		minLevel(initMinLevel),
 		maxLevel(initMaxLevel),
 		vocationIDs(initVocationIDs),
@@ -31,7 +31,8 @@ public:
 		hunt_area(initHunt_area),
 		questID(initQuestID),
 		leaderGuid(initLeaderGuid),
-		membersMap(std::move(initMembersMap)) { }
+		membersMap(std::move(initMembersMap)),
+		customText(std::move(initCustomText)) { }
 	~TeamFinder() = default;
 
 	uint16_t minLevel = 0;
@@ -47,6 +48,8 @@ public:
 	uint16_t hunt_area = 0;
 	uint16_t questID = 0;
 	uint32_t leaderGuid = 0;
+	// Soul Eater: free-text hunting place, used when teamType == 4 (TYPE_CUSTOM client-side)
+	std::string customText = {};
 
 	// list: player:getGuid(), player status
 	std::map<uint32_t, uint8_t> membersMap = {};

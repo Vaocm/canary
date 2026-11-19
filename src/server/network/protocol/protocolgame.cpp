@@ -2909,6 +2909,11 @@ void ProtocolGame::sendTeamFinderList() {
 				msg.add<uint16_t>(teamAssemble->questID);
 				break;
 			}
+			case 4: {
+				// Soul Eater: free-text hunting place
+				msg.addString(teamAssemble->customText);
+				break;
+			}
 
 			default:
 				break;
@@ -2958,6 +2963,11 @@ void ProtocolGame::sendLeaderTeamFinder(bool reset) {
 		}
 		case 3: {
 			msg.add<uint16_t>(teamAssemble->questID);
+			break;
+		}
+		case 4: {
+			// Soul Eater: free-text hunting place
+			msg.addString(teamAssemble->customText);
 			break;
 		}
 
@@ -3020,6 +3030,7 @@ void ProtocolGame::createLeaderTeamFinder(NetworkMessage &msg) {
 	uint16_t huntType1 = 0;
 	uint16_t huntType2 = 0;
 	uint16_t questID = 0;
+	std::string customText;
 
 	switch (teamAssemble->teamType) {
 		case 1: {
@@ -3037,6 +3048,15 @@ void ProtocolGame::createLeaderTeamFinder(NetworkMessage &msg) {
 			break;
 		}
 
+		case 4: {
+			// Soul Eater: free-text hunting place
+			customText = msg.getString();
+			if (customText.size() > 60) {
+				customText.resize(60);
+			}
+			break;
+		}
+
 		default:
 			break;
 	}
@@ -3045,6 +3065,7 @@ void ProtocolGame::createLeaderTeamFinder(NetworkMessage &msg) {
 	teamAssemble->hunt_type = huntType1;
 	teamAssemble->hunt_area = huntType2;
 	teamAssemble->questID = questID;
+	teamAssemble->customText = customText;
 	teamAssemble->leaderGuid = player->getGUID();
 
 	auto party = player->getParty();
