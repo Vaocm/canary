@@ -3234,6 +3234,12 @@ void ProtocolGame::parseMemberFinderWindow(NetworkMessage &msg) {
 				player->sendTeamFinderList();
 				return;
 			}
+			// Soul Eater: a player already in a party (any party, not just this team's) can't apply
+			if (player->getParty()) {
+				player->sendTextMessage(MESSAGE_STATUS, "You are already in a party.");
+				player->sendTeamFinderList();
+				return;
+			}
 			uint8_t vocationBit = 0;
 			switch (player->getVocation()->getFromVocation()) {
 				case 4:
