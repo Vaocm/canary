@@ -19,6 +19,7 @@
 #include "game/movement/position.hpp"
 #include "lua/callbacks/events_callbacks.hpp"
 #include "lua/creature/events.hpp"
+#include "map/spectators.hpp"
 
 std::shared_ptr<Party> Party::create(const std::shared_ptr<Player> &leader) {
 	auto party = std::make_shared<Party>();
@@ -262,16 +263,19 @@ bool Party::leaveParty(const std::shared_ptr<Player> &player, bool forceRemove /
 		updateMantraHolder();
 	}
 
-	// Soul Eater: a leader who leaves the party (by hand, not through the board) also takes the team off the
-	// Team Finder board; the board team only exists while its leader leads the party
+	// Soul Eater: a player who leaves no longer counts for the board team the party kept (see passPartyLeadership);
+	// inviting them back the normal way pauses the bonus like any other normal invite
+	boardTeamGuids.erase(player->getGUID());
+
+	// Soul Eater: a leader who leaves without handing over (nobody left to lead) also takes the team off the board
 	if (leader == player && g_game().getTeamFinder(player)) {
 		player->sendLeaderTeamFinder(true);
 		player->sendTextMessage(MESSAGE_STATUS, "You left the party, so your team was removed from the Team Finder board.");
-		for (const auto &member : getMembers()) {
-			for (const auto &other : getMembers()) {
-				other->sendCreatureSkull(member);
-			}
-		}
+	}
+	refreshBoardTeamSkulls();
+	// the player who left loses the blue board skull for everyone around too
+	for (const auto &spectator : Spectators().find<Player>(player->getPosition(), true)) {
+		spectator->getPlayer()->sendCreatureSkull(player);
 	}
 
 	if (missingLeader || empty()) {
@@ -302,6 +306,21 @@ bool Party::passPartyLeadership(const std::shared_ptr<Player> &player) {
 	broadcastPartyMessage(MESSAGE_PARTY_MANAGEMENT, ss.str(), true);
 
 	const auto &oldLeader = leader;
+
+	// Soul Eater: the board listing belongs to the leader who made it, so it comes off the board when they stop
+	// leading. The party keeps who joined through it, so those players keep the board bonus and blue skull.
+	if (const auto &team = g_game().getTeamFinder(oldLeader)) {
+		boardTeamGuids.clear();
+		boardTeamGuids.insert(oldLeader->getGUID());
+		for (const auto &[guid, status] : team->membersMap) {
+			if (status == 3) {
+				boardTeamGuids.insert(guid);
+			}
+		}
+		oldLeader->sendLeaderTeamFinder(true);
+		oldLeader->sendTextMessage(MESSAGE_STATUS, "You are no longer the party leader, so your team was removed from the Team Finder board. Players who joined through it keep the board bonus while they stay together in the party.");
+	}
+
 	m_leader = player;
 
 	if (oldLeader == m_mantraHolder.lock()) {
@@ -328,7 +347,47 @@ bool Party::passPartyLeadership(const std::shared_ptr<Player> &player) {
 	player->sendPartyCreatureShield(player);
 
 	player->sendTextMessage(MESSAGE_PARTY_MANAGEMENT, "You are now the leader of the party.");
+	refreshBoardTeamSkulls();
 	return true;
+}
+
+uint32_t Party::getBoardTeamSnapshotCount() {
+	if (boardTeamGuids.empty()) {
+		return 0;
+	}
+	const auto &leader = getLeader();
+	if (!leader || !boardTeamGuids.contains(leader->getGUID())) {
+		return 0;
+	}
+	uint32_t count = 1; // the leader
+	for (const auto &member : getMembers()) {
+		if (member && boardTeamGuids.contains(member->getGUID())) {
+			++count;
+		}
+	}
+	return count;
+}
+
+bool Party::isBoardTeamSnapshotComplete() {
+	const auto members = getMembers();
+	return !members.empty() && getBoardTeamSnapshotCount() == members.size() + 1;
+}
+
+void Party::refreshBoardTeamSkulls() {
+	// the blue board skull is seen by everyone around, so update it for all spectators
+	std::vector<std::shared_ptr<Player>> everyone = getMembers();
+	if (const auto &leader = getLeader()) {
+		everyone.emplace_back(leader);
+	}
+	for (const auto &target : everyone) {
+		if (!target) {
+			continue;
+		}
+		// not g_game().updateCreatureSkull(): that one does nothing outside PvP worlds, the board skull shows everywhere
+		for (const auto &spectator : Spectators().find<Player>(target->getPosition(), true)) {
+			spectator->getPlayer()->sendCreatureSkull(target);
+		}
+	}
 }
 
 void Party::applyGuidingPresence(const std::vector<std::shared_ptr<Player>> &members) {

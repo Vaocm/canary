@@ -189,7 +189,8 @@ int PartyFunctions::luaPartyGetTeamFinderCount(lua_State* L) {
 	}
 	const auto &team = g_game().getTeamFinder(leader);
 	if (!team) {
-		lua_pushnumber(L, 0);
+		// the original leader stopped leading: count the board team the party kept (0 when there is none)
+		lua_pushnumber(L, party->getBoardTeamSnapshotCount());
 		return 1;
 	}
 	uint32_t count = 1; // the leader

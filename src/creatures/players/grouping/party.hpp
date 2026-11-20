@@ -108,6 +108,13 @@ public:
 
 	uint32_t getAnalyzerTimeNow() const;
 
+	// Soul Eater: board team kept by the party after the leader stops leading (left the party or passed the
+	// leadership). The listing is taken off the board, but the players who joined through it keep the board
+	// bonus and blue skull while every player in the party is one of them.
+	uint32_t getBoardTeamSnapshotCount();
+	bool isBoardTeamSnapshotComplete();
+	void refreshBoardTeamSkulls();
+
 public:
 	// Party analyzer
 	time_t trackerTime = time(nullptr);
@@ -131,6 +138,8 @@ private:
 
 	std::weak_ptr<Player> m_leader;
 	std::weak_ptr<Player> m_mantraHolder;
+
+	std::set<uint32_t> boardTeamGuids; // Soul Eater: see getBoardTeamSnapshotCount()
 
 	bool sharedExpActive = false;
 	bool sharedExpEnabled = false;

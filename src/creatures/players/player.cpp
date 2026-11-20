@@ -7011,7 +7011,8 @@ static bool isInBoardTeam(const std::shared_ptr<Player> &player) {
 	}
 	const auto &team = g_game().getTeamFinder(leader);
 	if (!team) {
-		return false;
+		// the original leader stopped leading: the party keeps the board team it was built from
+		return party->isBoardTeamSnapshotComplete();
 	}
 	const auto members = party->getMembers();
 	if (members.empty()) {
