@@ -90,8 +90,7 @@ void ProtocolStatus::sendStatusString() {
 	tsqp.append_attribute("version") = "1.0";
 
 	pugi::xml_node serverinfo = tsqp.append_child("serverinfo");
-	// Soul Eater: server lists see real uptime + 2 days, same as the website shows
-	const uint64_t uptime = (OTSYS_TIME() - ProtocolStatus::start) / 1000 + 2 * 24 * 60 * 60;
+	const uint64_t uptime = (OTSYS_TIME() - ProtocolStatus::start) / 1000;
 	serverinfo.append_attribute("uptime") = std::to_string(uptime).c_str();
 	serverinfo.append_attribute("ip") = g_configManager().getString(IP).c_str();
 	serverinfo.append_attribute("servername") = g_configManager().getString(ConfigKey_t::SERVER_NAME).c_str();
@@ -168,7 +167,7 @@ void ProtocolStatus::sendInfo(uint16_t requestedInfo, const std::string &charact
 		output->addString(g_configManager().getString(SERVER_MOTD));
 		output->addString(g_configManager().getString(LOCATION));
 		output->addString(g_configManager().getString(URL));
-		output->add<uint64_t>((OTSYS_TIME() - ProtocolStatus::start) / 1000 + 2 * 24 * 60 * 60); // Soul Eater: real uptime + 2 days
+		output->add<uint64_t>((OTSYS_TIME() - ProtocolStatus::start) / 1000);
 	}
 
 	if (requestedInfo & REQUEST_PLAYERS_INFO) {
