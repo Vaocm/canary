@@ -262,6 +262,18 @@ bool Party::leaveParty(const std::shared_ptr<Player> &player, bool forceRemove /
 		updateMantraHolder();
 	}
 
+	// Soul Eater: a leader who leaves the party (by hand, not through the board) also takes the team off the
+	// Team Finder board; the board team only exists while its leader leads the party
+	if (leader == player && g_game().getTeamFinder(player)) {
+		player->sendLeaderTeamFinder(true);
+		player->sendTextMessage(MESSAGE_STATUS, "You left the party, so your team was removed from the Team Finder board.");
+		for (const auto &member : getMembers()) {
+			for (const auto &other : getMembers()) {
+				other->sendCreatureSkull(member);
+			}
+		}
+	}
+
 	if (missingLeader || empty()) {
 		disband();
 	}
