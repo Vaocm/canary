@@ -97,7 +97,7 @@ namespace {
 		}
 		switch (seFxElement) {
 			case COMBAT_FIREDAMAGE:
-				return seFxArea ? CONST_ME_FIREAREA : CONST_ME_FIREATTACK;
+				return seFxArea ? CONST_ME_HITBYFIRE : CONST_ME_FIREATTACK; // area: Fire Wave's fire (exevo flam hur), not Hell's Core's
 			case COMBAT_ENERGYDAMAGE:
 				return seFxArea ? CONST_ME_ENERGYAREA : CONST_ME_ENERGYHIT;
 			case COMBAT_DEATHDAMAGE:
