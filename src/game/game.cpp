@@ -11860,10 +11860,10 @@ uint32_t Game::makeInfluencedMonster() {
 	}
 
 	auto maxTries = forgeableMonsters.size();
-	uint16_t tries = 0;
+	size_t tries = 0;
 	std::shared_ptr<Monster> monster = nullptr;
 	while (true) {
-		if (tries == maxTries) {
+		if (tries >= maxTries) {
 			return 0;
 		}
 
@@ -11939,10 +11939,10 @@ uint32_t Game::makeFiendishMonster(uint32_t forgeableMonsterId /* = 0*/, bool cr
 	}
 
 	auto maxTries = forgeableMonsters.size();
-	uint16_t tries = 0;
+	size_t tries = 0;
 	std::shared_ptr<Monster> monster = nullptr;
 	while (true) {
-		if (tries == maxTries) {
+		if (tries >= maxTries) {
 			return 0;
 		}
 
@@ -11953,7 +11953,10 @@ uint32_t Game::makeFiendishMonster(uint32_t forgeableMonsterId /* = 0*/, bool cr
 		if (fiendishMonsterId == 0) {
 			fiendishMonsterId = forgeableMonsters.at(random);
 		}
-		monster = getMonsterByID(fiendishMonsterId);
+fiendishMonsterId);
+		if (monster == nullptr && forgeableMonsterId != 0) {
+			return 0; // Soul Eater fix: that monster is gone
+		}
 		if (monster == nullptr) {
 			continue;
 		}
@@ -11961,6 +11964,9 @@ uint32_t Game::makeFiendishMonster(uint32_t forgeableMonsterId /* = 0*/, bool cr
 		// Avoiding replace forgeable monster with another
 		if (monster->getForgeStack() == 0) {
 			auto it = std::find(forgeableMonsters.begin(), forgeableMonsters.end(), fiendishMonsterId);
+			if (it == forgeableMonsters.end() && forgeableMonsterId != 0) {
+				return 0; // Soul Eater fix: a monster not in the forgeable list is never found
+			}
 			if (it == forgeableMonsters.end()) {
 				monster = nullptr;
 				continue;
