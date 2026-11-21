@@ -11953,7 +11953,7 @@ uint32_t Game::makeFiendishMonster(uint32_t forgeableMonsterId /* = 0*/, bool cr
 		if (fiendishMonsterId == 0) {
 			fiendishMonsterId = forgeableMonsters.at(random);
 		}
-fiendishMonsterId);
+		monster = getMonsterByID(fiendishMonsterId);
 		if (monster == nullptr && forgeableMonsterId != 0) {
 			return 0; // Soul Eater fix: that monster is gone
 		}
