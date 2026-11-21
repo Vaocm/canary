@@ -1473,7 +1473,7 @@ int PlayerFunctions::luaPlayerSendSpellCooldown(lua_State* L) {
 		lua_pushnil(L);
 		return 1;
 	}
-	const uint8_t spellId = Lua::getNumber<uint32_t>(L, 2, 1);
+	const auto spellId = Lua::getNumber<uint16_t>(L, 2, 1); // Soul Eater fix: was uint8_t, so spell ids above 255 (Assassin familiar 975, Monk familiar 282) reached the client wrapped
 	const auto time = Lua::getNumber<uint32_t>(L, 3, 0);
 
 	player->sendSpellCooldown(spellId, time);
