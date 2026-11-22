@@ -8951,14 +8951,14 @@ void Game::sendEffects(
 ) {
 	uint16_t hitEffect;
 	if (message.primary.value) {
-		combatGetTypeInfo(damage.primary.type, target, message.primary.color, hitEffect); if (damage.instantSpellName == "Forked Glacier" || damage.instantSpellName == "Forked Thorns") { hitEffect = CONST_ME_NONE; } // Soul Eater: these show only their own effect
+		combatGetTypeInfo(damage.primary.type, target, message.primary.color, hitEffect);
 		if (hitEffect != CONST_ME_NONE) {
 			addMagicEffect(spectators, targetPos, hitEffect);
 		}
 	}
 
 	if (message.secondary.value) {
-		combatGetTypeInfo(damage.secondary.type, target, message.secondary.color, hitEffect); if (damage.instantSpellName == "Forked Glacier" || damage.instantSpellName == "Forked Thorns") { hitEffect = CONST_ME_NONE; } // Soul Eater: these show only their own effect
+		combatGetTypeInfo(damage.secondary.type, target, message.secondary.color, hitEffect);
 		if (hitEffect != CONST_ME_NONE) {
 			addMagicEffect(spectators, targetPos, hitEffect);
 		}
