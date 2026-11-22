@@ -48,9 +48,9 @@ namespace {
 		const auto &target = player->getAttackedCreature();
 		if (target) {
 			variant.type = VARIANT_TARGETPOSITION;
-			const auto &aimAtTargetSpellIds = player->getAimAtTargetSpells();
-			if (aimAtTargetSpellIds.find(spellId) != aimAtTargetSpellIds.end()) {
-				direction = getPrimaryDirection(casterPos, target->getPosition());
+			(void)spellId; // Soul Eater: directional spells always aim at the attacked creature and the caster turns to face it (the client never sends 0xC8)
+			if (const Position &targetPos = target->getPosition(); targetPos.z == casterPos.z && targetPos != casterPos) {
+				direction = getPrimaryDirection(casterPos, targetPos); if (direction != player->getDirection()) { g_game().internalCreatureTurn(player, direction); }
 			}
 		}
 
