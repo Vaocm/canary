@@ -86,6 +86,60 @@ namespace {
 		if (seFxElement == COMBAT_NONE || effect == CONST_ME_NONE) {
 			return effect;
 		}
+		// Soul Eater: the converted spell keeps its own shape in the stance colour
+		// (official 15.x colour copies; client + server appearances effects 387/388 and 392-405)
+		switch (effect) {
+			case CONST_ME_FIREAREA: // Hell's Core
+				if (seFxElement == COMBAT_ENERGYDAMAGE) {
+					return 392;
+				}
+				if (seFxElement == COMBAT_DEATHDAMAGE) {
+					return 393;
+				}
+				break;
+			case CONST_ME_FIREATTACK: // Flame Strikes, Apprentice's Strike
+				if (seFxElement == COMBAT_ENERGYDAMAGE) {
+					return 394;
+				}
+				if (seFxElement == COMBAT_DEATHDAMAGE) {
+					return 395;
+				}
+				break;
+			case CONST_ME_MORTAREA: // Death Strike, Great Death Beam
+				if (seFxElement == COMBAT_ENERGYDAMAGE) {
+					return 396;
+				}
+				if (seFxElement == COMBAT_FIREDAMAGE) {
+					return 397;
+				}
+				break;
+			case CONST_ME_ENERGYAREA: // Energy Strikes, Energy Wave, Great Energy Beam, Lightning, Buzz
+				if (seFxElement == COMBAT_DEATHDAMAGE) {
+					return 401;
+				}
+				if (seFxElement == COMBAT_FIREDAMAGE) {
+					return 402;
+				}
+				break;
+			case CONST_ME_BIGCLOUDS: // Rage of the Skies
+				if (seFxElement == COMBAT_DEATHDAMAGE) {
+					return 398;
+				}
+				if (seFxElement == COMBAT_FIREDAMAGE) {
+					return 399;
+				}
+				break;
+			case CONST_ME_ENERGYHIT: // Energy Beam
+				if (seFxElement == COMBAT_DEATHDAMAGE) {
+					return 404;
+				}
+				if (seFxElement == COMBAT_FIREDAMAGE) {
+					return 405;
+				}
+				break;
+			default:
+				break;
+		}
 		// Soul Eater: a fire spell converted by Master of Thunder shows purple fire (388), by Master of Decay black fire (387)
 		if (seFxSource == COMBAT_FIREDAMAGE) {
 			if (seFxElement == COMBAT_ENERGYDAMAGE) {
