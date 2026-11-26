@@ -1332,6 +1332,14 @@ bool Player::canSeeCreature(const std::shared_ptr<Creature> &creature) const {
 		return false;
 	}
 
+	// Soul Eater: staff only see ghosts of their own rank or lower (a gamemaster cannot see a ghosted community manager or god)
+	if (creature->isInGhostMode()) {
+		const auto &ghostPlayer = creature->getPlayer();
+		if (ghostPlayer && ghostPlayer->getGroup() && ghostPlayer->getGroup()->id > group->id) {
+			return false;
+		}
+	}
+
 	if (!creature->getPlayer() && !canSeeInvisibility() && creature->isInvisible()) {
 		return false;
 	}
