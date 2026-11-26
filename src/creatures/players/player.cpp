@@ -3170,7 +3170,7 @@ int32_t Player::getIdleTime() const {
 
 void Player::setTraining(bool value) {
 	for (const auto &[key, player] : g_game().getPlayers()) {
-		if (!this->isInGhostMode() || player->isAccessPlayer()) {
+		if (!this->isInGhostMode() || (player->isAccessPlayer() && player->getGroup()->id >= group->id)) {
 			player->vip().notifyStatusChange(static_self_cast<Player>(), value ? VipStatus_t::Training : VipStatus_t::Online, false);
 		}
 	}
