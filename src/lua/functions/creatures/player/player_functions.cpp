@@ -3759,7 +3759,7 @@ int PlayerFunctions::luaPlayerSetGhostMode(lua_State* L) {
 
 	for (const auto &spectator : Spectators().find<Player>(position, true)) {
 		const auto &tmpPlayer = spectator->getPlayer();
-		if (tmpPlayer != player && !tmpPlayer->isAccessPlayer()) {
+		if (tmpPlayer != player && (!tmpPlayer->isAccessPlayer() || tmpPlayer->getGroup()->id < player->getGroup()->id)) {
 			if (enabled) {
 				tmpPlayer->sendRemoveTileThing(position, tile->getClientIndexOfCreature(tmpPlayer, player));
 			} else {
@@ -3772,13 +3772,13 @@ int PlayerFunctions::luaPlayerSetGhostMode(lua_State* L) {
 
 	if (player->isInGhostMode()) {
 		for (const auto &it : g_game().getPlayers()) {
-			if (!it.second->isAccessPlayer()) {
+			if (!it.second->isAccessPlayer() || it.second->getGroup()->id < player->getGroup()->id) {
 				it.second->vip().notifyStatusChange(player, VipStatus_t::Offline);
 			}
 		}
 	} else {
 		for (const auto &it : g_game().getPlayers()) {
-			if (!it.second->isAccessPlayer()) {
+			if (!it.second->isAccessPlayer() || it.second->getGroup()->id < player->getGroup()->id) {
 				it.second->vip().notifyStatusChange(player, player->vip().getStatus());
 			}
 		}
