@@ -7712,7 +7712,7 @@ void ProtocolGame::sendAddCreature(const std::shared_ptr<Creature> &creature, co
 			VipStatus_t vipStatus;
 
 			std::shared_ptr<Player> vipPlayer = g_game().getPlayerByGUID(entry.guid);
-			if (!vipPlayer) {
+			if (!vipPlayer || (vipPlayer->isInGhostMode() && vipPlayer->getGroup()->id > player->getGroup()->id)) {
 				vipStatus = VipStatus_t::Offline;
 			} else {
 				vipStatus = vipPlayer->vip().getStatus();
