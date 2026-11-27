@@ -301,8 +301,8 @@ const static std::unordered_map<uint8_t, std::reference_wrapper<const std::vecto
 // To avoid conflict in other files that might use a function with the same name
 // Here are built-in helper functions
 namespace {
-	template <typename SpellType>
-	bool checkSpellArea(const std::array<SpellType, 5> &spellsTable, const std::string &spellName, uint8_t stage) {
+	template <typename SpellType, size_t N>
+	bool checkSpellArea(const std::array<SpellType, N> &spellsTable, const std::string &spellName, uint8_t stage) {
 		for (const auto &spellTable : spellsTable) {
 			auto size = std::ssize(spellTable.grade);
 			g_logger().debug("spell area stage {}, grade {}", stage, size);
@@ -319,8 +319,8 @@ namespace {
 		return false;
 	}
 
-	template <typename SpellType>
-	int checkSpellAdditionalTarget(const std::array<SpellType, 5> &spellsTable, std::string_view spellName, uint8_t stage) {
+	template <typename SpellType, size_t N>
+	int checkSpellAdditionalTarget(const std::array<SpellType, N> &spellsTable, std::string_view spellName, uint8_t stage) {
 		for (const auto &spellTable : spellsTable) {
 			auto size = std::ssize(spellTable.grade);
 			g_logger().debug("spell target stage {}, grade {}", stage, size);
@@ -335,8 +335,8 @@ namespace {
 		return 0;
 	}
 
-	template <typename SpellType>
-	int checkSpellAdditionalDuration(const std::array<SpellType, 5> &spellsTable, std::string_view spellName, uint8_t stage) {
+	template <typename SpellType, size_t N>
+	int checkSpellAdditionalDuration(const std::array<SpellType, N> &spellsTable, std::string_view spellName, uint8_t stage) {
 		for (const auto &spellTable : spellsTable) {
 			auto size = std::ssize(spellTable.grade);
 			g_logger().debug("spell duration stage {}, grade {}", stage, size);
