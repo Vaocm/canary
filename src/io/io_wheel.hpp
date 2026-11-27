@@ -80,7 +80,7 @@ public:
 				std::string name;
 			};
 
-			std::array<Druid, 5> druid;
+			std::array<Druid, 6> druid; // Soul Eater: 6 (Forked Thorns + Forked Glacier share one conviction perk)
 			std::array<Knight, 5> knight;
 			std::array<Paladin, 5> paladin;
 			std::array<Sorcerer, 5> sorcerer;
