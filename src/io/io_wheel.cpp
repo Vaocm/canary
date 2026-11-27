@@ -272,9 +272,15 @@ void IOWheel::initializeDruidSpells() {
 	m_wheelBonusData.spells.druid[3].grade[1].increase.damage = static_cast<int>(std::round(6.5));
 	m_wheelBonusData.spells.druid[3].grade[2].leech.life = 10;
 
-	m_wheelBonusData.spells.druid[4].name = "Heal Friend";
-	m_wheelBonusData.spells.druid[4].grade[1].increase.heal = 4;
-	m_wheelBonusData.spells.druid[4].grade[2].increase.heal = 6;
+	// Soul Eater: druid wheel like real Tibia. Heal Friend left the wheel; Strong Ice Wave moved to the red 50 / blue 200 slots;
+	// red 200 / blue 50 are Augmented Forked Spells (I: -2s cooldown, II: jumps to +1 additional target) for both Forked spells.
+	m_wheelBonusData.spells.druid[4].name = "Forked Thorns";
+	m_wheelBonusData.spells.druid[4].grade[1].decrease.cooldown = 2;
+	m_wheelBonusData.spells.druid[4].grade[2].increase.additionalTarget = 1;
+
+	m_wheelBonusData.spells.druid[5].name = "Forked Glacier";
+	m_wheelBonusData.spells.druid[5].grade[1].decrease.cooldown = 2;
+	m_wheelBonusData.spells.druid[5].grade[2].increase.additionalTarget = 1;
 }
 
 void IOWheel::initializeKnightSpells() {
@@ -611,7 +617,8 @@ void IOWheel::slotRed200(const std::shared_ptr<Player> &player, uint16_t points,
 				addSpell(player, bonusData, WheelSlots_t::SLOT_RED_200, points, focusSpellName);
 			}
 		} else {
-			addSpell(player, bonusData, WheelSlots_t::SLOT_RED_200, points, "Strong Ice Wave");
+			addSpell(player, bonusData, WheelSlots_t::SLOT_RED_200, points, "Forked Thorns");
+			addSpell(player, bonusData, WheelSlots_t::SLOT_RED_200, points, "Forked Glacier");
 		}
 		bonusData.stats.health += 1 * points;
 		bonusData.stats.mana += 6 * points;
@@ -785,7 +792,7 @@ void IOWheel::slotRed50(const std::shared_ptr<Player> &player, uint16_t points, 
 	} else if (isSorcerer(vocationCipId)) {
 		addSpell(player, bonusData, WheelSlots_t::SLOT_RED_50, points, "Great Fire Wave");
 	} else if (isDruid(vocationCipId)) {
-		addSpell(player, bonusData, WheelSlots_t::SLOT_RED_50, points, "Heal Friend");
+		addSpell(player, bonusData, WheelSlots_t::SLOT_RED_50, points, "Strong Ice Wave");
 	} else {
 		addSpell(player, bonusData, WheelSlots_t::SLOT_RED_50, points, "Flurry of Blows");
 	}
@@ -853,7 +860,8 @@ void IOWheel::slotBlue50(const std::shared_ptr<Player> &player, uint16_t points,
 				addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_50, points, focusSpellName);
 			}
 		} else {
-			addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_50, points, "Strong Ice Wave");
+			addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_50, points, "Forked Thorns");
+			addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_50, points, "Forked Glacier");
 		}
 		bonusData.stats.mana += 6 * points;
 	} else {
@@ -1023,7 +1031,7 @@ void IOWheel::slotBlue200(const std::shared_ptr<Player> &player, uint16_t points
 		if (isSorcerer(vocationCipId)) {
 			addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_200, points, "Great Fire Wave");
 		} else {
-			addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_200, points, "Heal Friend");
+			addSpell(player, bonusData, WheelSlots_t::SLOT_BLUE_200, points, "Strong Ice Wave");
 		}
 		bonusData.stats.health += 1 * points;
 		bonusData.stats.mana += 6 * points;
