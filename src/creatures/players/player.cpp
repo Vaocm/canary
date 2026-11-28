@@ -11584,7 +11584,11 @@ void Player::forgeResourceConversion(ForgeAction_t actionType) {
 			return;
 		}
 
-		const auto upgradeCost = dustLevel - 75;
+		// Soul Eater: each increase raises the limit by 25 (capped at forgeMaxDust) and costs the current limit
+		// (100 -> 125 costs 100 dust, 125 -> 150 costs 125, ...). The client module game_forge shows the same numbers.
+		const auto maxDust = static_cast<uint64_t>(g_configManager().getNumber(FORGE_MAX_DUST));
+		const auto step = std::min<uint64_t>(25, maxDust - dustLevel);
+		const auto upgradeCost = dustLevel;
 		if (const auto dusts = getForgeDusts();
 		    upgradeCost > dusts) {
 			g_logger().error("[{}] Not enough dust", __FUNCTION__);
@@ -11593,9 +11597,9 @@ void Player::forgeResourceConversion(ForgeAction_t actionType) {
 		}
 
 		history.cost = upgradeCost;
-		history.gained = dustLevel;
+		history.gained = dustLevel + step;
 		removeForgeDusts(upgradeCost);
-		addForgeDustLevel(1);
+		addForgeDustLevel(step);
 	}
 
 	history.createdAt = getTimeMsNow();
@@ -11823,7 +11827,7 @@ void Player::registerForgeHistoryDescription(ForgeHistory history) {
 		detailsResponse << fmt::format("Converted {:d} slivers to {:d} exalted core.", history.cost, history.gained);
 	} else if (history.actionType == ForgeAction_t::INCREASELIMIT) {
 		history.actionType = ForgeAction_t::DUSTTOSLIVERS;
-		detailsResponse << fmt::format("Spent {:d} dust to increase the dust limit to {:d}.", history.cost, history.gained + 1);
+		detailsResponse << fmt::format("Spent {:d} dust to increase the dust limit to {:d}.", history.cost, history.gained);
 	} else {
 		detailsResponse << "(unknown)";
 	}
