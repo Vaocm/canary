@@ -54,6 +54,7 @@
     <ClInclude Include="..\src\creatures\players\components\player_forge_history.hpp" />
     <ClInclude Include="..\src\creatures\players\components\player_storage.hpp" />
     <ClInclude Include="..\src\creatures\players\components\player_title.hpp" />
+    <ClInclude Include="..\src\creatures\players\components\player_taskboard.hpp" />
     <ClInclude Include="..\src\creatures\players\components\player_vip.hpp" />
     <ClInclude Include="..\src\creatures\players\components\wheel\player_wheel.hpp" />
     <ClInclude Include="..\src\creatures\players\components\weapon_proficiency.hpp" />
@@ -283,6 +284,7 @@
     <ClCompile Include="..\src\creatures\players\components\player_forge_history.cpp" />
     <ClCompile Include="..\src\creatures\players\components\player_storage.cpp" />
     <ClCompile Include="..\src\creatures\players\components\player_title.cpp" />
+    <ClCompile Include="..\src\creatures\players\components\player_taskboard.cpp" />
     <ClCompile Include="..\src\creatures\players\components\player_vip.cpp" />
     <ClCompile Include="..\src\creatures\players\components\wheel\player_wheel.cpp" />
     <ClCompile Include="..\src\creatures\players\components\weapon_proficiency.cpp" />
